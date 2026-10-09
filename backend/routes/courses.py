@@ -17,6 +17,7 @@ from metier import (ETAPES_CHAUFFEUR, calculer_prix, co2_evite_kg, decalage_fuse
                     maintenant, numero_document)
 from outils import nouvel_id, parametres, prochain_numero
 from routes.public import DemandeEstimation, Point, estimer
+from notifications import notifier_client
 from securite import EQUIPE, exiger, utilisateur_courant
 
 router = APIRouter(tags=["Courses"])
@@ -87,7 +88,7 @@ async def avec_position(c: Dict[str, Any]) -> Dict[str, Any]:
     return c
 
 
-async def proposer_aux_chauffeurs(course: Dict[str, Any]) -> None:
+async def proposer_aux_chauffeurs(course: Dict[str, Any], rayon_km: Optional[float] = None) -> None:
     """Rapprochement : les chauffeurs en ligne, libres, avec un véhicule de la catégorie, les plus proches d'abord.
     La course leur est PROPOSÉE (liste « proposee_a ») ; le premier qui accepte l'obtient."""
     from metier import chauffeurs_proches
@@ -97,8 +98,12 @@ async def proposer_aux_chauffeurs(course: Dict[str, Any]) -> None:
                                                          "chauffeur.en_ligne": True}, {"_id": 0})]
     occupes = {c["chauffeur"]["id"] async for c in db.courses.find(
         {"statut": {"$in": ["acceptee", "en_approche", "arrivee", "en_cours"]}}, {"chauffeur.id": 1})}
-    libres = [u for u in candidats if (u.get("chauffeur") or {}).get("vehicule_id") in vehicules and u["id"] not in occupes]
-    proches = chauffeurs_proches(course["depart"], libres, rayon_km=25.0, max_resultats=8)
+    refus = set(course.get("refusee_par") or [])   # lot 2 : les chauffeurs qui ont refusé ne la revoient pas
+    libres = [u for u in candidats if (u.get("chauffeur") or {}).get("vehicule_id") in vehicules
+              and u["id"] not in occupes and u["id"] not in refus]
+    if rayon_km is None:
+        rayon_km = float((await parametres()).get("rayon_recherche_km") or 25.0)
+    proches = chauffeurs_proches(course["depart"], libres, rayon_km=rayon_km, max_resultats=8)
     # Aucun chauffeur positionné à proximité : la course reste visible de tous les chauffeurs libres de la catégorie
     ids = [u["id"] for u in proches] or [u["id"] for u in libres]
     await db.courses.update_one({"id": course["id"]}, {"$set": {"proposee_a": ids}})
@@ -132,7 +137,7 @@ async def commander(corps: NouvelleCourse, u: dict = Depends(utilisateur_courant
         "mode": corps.mode, "categorie": corps.categorie,
         "depart": corps.depart.model_dump(), "arrivee": corps.arrivee.model_dump() if corps.arrivee else None,
         "quand": iso(quand) if quand else iso(), "duree_heures": corps.duree_heures,
-        "distance_km": est["distance_km"], "duree_min": est["duree_min"],
+        "distance_km": est["distance_km"], "duree_min": est["duree_min"], "trace": est.get("trace"),
         "prix_estime": est["prix"], "prix_final": None, "devise": est["devise"], "detail_prix": est["detail"],
         "paiement": {"moyen": corps.paiement, "statut": "non_paye", "reference": None},
         "client": {"id": u["id"], "nom": u.get("nom"), "telephone": u.get("telephone")},
@@ -142,6 +147,8 @@ async def commander(corps: NouvelleCourse, u: dict = Depends(utilisateur_courant
     await db.courses.insert_one(dict(course))
     if statut == "recherche":
         await proposer_aux_chauffeurs(course)
+    else:
+        notifier_client("reservation", course, await parametres(), u.get("langue") or "fr")
     return await charger(course["id"])
 
 
@@ -172,6 +179,10 @@ async def annuler(course_id: str, corps: Annulation, u: dict = Depends(utilisate
         raise HTTPException(status_code=409, detail="Cette course ne peut plus être annulée")
     await db.courses.update_one({"id": course_id}, {"$set": {"statut": "annulee", "annulation": {
         "par": u["role"], "motif": corps.motif, "le": iso()}}, "$push": {"historique": _historique("annulee")}})
+    if c.get("vehicule"):
+        await db.vehicules.update_one({"id": c["vehicule"]["id"], "statut": "en_service"}, {"$set": {"statut": "disponible"}})
+    if u["id"] != (c.get("client") or {}).get("id"):
+        notifier_client("annulee", c, await parametres())
     return await voir(course_id, u)
 
 
@@ -282,6 +293,7 @@ async def accepter(course_id: str, u: dict = Depends(exiger("chauffeur"))):
     if res.modified_count == 0:
         raise HTTPException(status_code=409, detail="Course déjà prise par un autre chauffeur ou annulée")
     await db.vehicules.update_one({"id": vehicule["id"]}, {"$set": {"statut": "en_service"}})
+    notifier_client("acceptee", await charger(course_id), await parametres())
     return await voir(course_id, u)
 
 
@@ -319,4 +331,57 @@ async def etape(course_id: str, corps: Etape, u: dict = Depends(exiger("chauffeu
             await db.vehicules.update_one({"id": c["vehicule"]["id"]}, {"$set": {"statut": "disponible"},
                                                                          "$inc": {"kilometrage": round(distance, 1)}})
     await db.courses.update_one({"id": course_id}, {"$set": maj, "$push": {"historique": _historique(corps.statut)}})
+    if corps.statut in ("arrivee", "terminee"):
+        notifier_client(corps.statut, await charger(course_id), await parametres())
     return await voir(course_id, u)
+
+
+# ------------------------------------------------------------------------------------------------- lot 2 : relance, refus, libération
+@router.post("/courses/{course_id}/relancer")
+async def relancer(course_id: str, u: dict = Depends(utilisateur_courant)):
+    """Le client relance la recherche (aucun chauffeur n'a encore accepté) : rayon élargi à 2 × le rayon habituel."""
+    c = await charger(course_id)
+    if (c.get("client") or {}).get("id") != u["id"] and u["role"] not in EQUIPE:
+        raise HTTPException(status_code=404, detail="Course introuvable")
+    if c["statut"] != "recherche":
+        raise HTTPException(status_code=409, detail="La course n'est pas en recherche de chauffeur")
+    rayon = float((await parametres()).get("rayon_recherche_km") or 25.0) * 2
+    await db.courses.update_one({"id": course_id}, {"$set": {"relancee_le": iso()}, "$inc": {"relances": 1}})
+    await proposer_aux_chauffeurs(c, rayon_km=rayon)
+    return await voir(course_id, u)
+
+
+@router.post("/courses/{course_id}/refuser")
+async def refuser(course_id: str, u: dict = Depends(exiger("chauffeur"))):
+    """Le chauffeur refuse une course proposée : elle disparaît de sa liste et ne lui est plus proposée."""
+    c = await charger(course_id)
+    if c["statut"] != "recherche":
+        raise HTTPException(status_code=409, detail="Cette course n'est plus proposée")
+    await db.courses.update_one({"id": course_id}, {"$pull": {"proposee_a": u["id"]}, "$addToSet": {"refusee_par": u["id"]}})
+    return {"ok": True}
+
+
+@router.post("/courses/{course_id}/liberer")
+async def liberer(course_id: str, corps: Annulation, u: dict = Depends(exiger("chauffeur", *EQUIPE))):
+    """Le chauffeur se désiste AVANT le départ (panne, empêchement) : la course repart en recherche d'un autre
+    chauffeur, le véhicule redevient disponible et le client est prévenu."""
+    c = await charger(course_id)
+    if u["role"] == "chauffeur" and (c.get("chauffeur") or {}).get("id") != u["id"]:
+        raise HTTPException(status_code=404, detail="Course introuvable")
+    if c["statut"] not in ("acceptee", "en_approche", "arrivee"):
+        raise HTTPException(status_code=409, detail="La course ne peut plus être libérée")
+    ancien = (c.get("chauffeur") or {}).get("id")
+    await db.courses.update_one({"id": course_id}, {
+        "$set": {"statut": "recherche", "chauffeur": None, "vehicule": None},
+        "$addToSet": {"refusee_par": ancien},
+        "$push": {"historique": {"statut": "recherche", "le": iso(), "motif": corps.motif or "chauffeur libéré"}}})
+    if c.get("vehicule"):
+        await db.vehicules.update_one({"id": c["vehicule"]["id"]}, {"$set": {"statut": "disponible"}})
+    nouvelle = await charger(course_id)
+    await proposer_aux_chauffeurs(nouvelle)
+    notifier_client("liberee", c, await parametres())
+    # Le chauffeur n'est plus affecté : on renvoie l'état de la course sans passer par le contrôle « peut_voir »
+    resultat = await charger(course_id)
+    for cle in ("proposee_a", "refusee_par", "messages"):
+        resultat.pop(cle, None)
+    return resultat

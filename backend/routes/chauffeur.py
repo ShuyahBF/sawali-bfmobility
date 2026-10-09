@@ -58,7 +58,7 @@ async def mes_courses(u: dict = Depends(exiger("chauffeur"))):
     # Proposées : celles qui me sont proposées, et celles proposées à personne (aucun chauffeur en ligne au moment
     # de la commande) dans la catégorie de mon véhicule
     vehicule = await db.vehicules.find_one({"id": (u.get("chauffeur") or {}).get("vehicule_id")}, {"_id": 0, "categorie": 1}) or {}
-    filtre = {"statut": "recherche", "$or": [{"proposee_a": u["id"]},
+    filtre = {"statut": "recherche", "refusee_par": {"$ne": u["id"]}, "$or": [{"proposee_a": u["id"]},
                                              {"proposee_a": {"$size": 0}, "categorie": vehicule.get("categorie", "-")}]}
     proposees = [c async for c in db.courses.find(filtre,
                                                    {"_id": 0, "proposee_a": 0, "messages": 0}).sort("cree_le", 1).limit(20)]

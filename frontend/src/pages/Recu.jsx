@@ -12,6 +12,9 @@ import { useLangue } from '@/i18n/index.jsx'
 import api, { messageErreur } from '@/lib/api.js'
 import { formatDateHeure, formatDuree } from '@/lib/format.js'
 
+// Nom affiché des opérateurs de paiement en ligne
+const NOMS_OPERATEURS = { pawapay: 'pawaPay', stripe: 'Stripe' }
+
 export default function Recu() {
   const { id } = useParams()
   const { t, langue } = useLangue()
@@ -89,7 +92,10 @@ export default function Recu() {
 
             {/* Paiement */}
             <p className="mt-4 text-sm">
-              <span className="text-ardoise">{t('recu.paiement')} :</span> <b>{t(`cmd.${recu.paiement?.moyen}`)}</b> — {t(`paiement.${recu.paiement?.statut || 'non_paye'}`)}
+              <span className="text-ardoise">{t('recu.paiement')} :</span> <b>{t(`cmd.${recu.paiement?.moyen}`)}</b>
+              {/* Opérateur du paiement en ligne (pawaPay, Stripe…), s'il y en a un */}
+              {recu.paiement?.operateur && <> ({t('recu.operateur')} : {NOMS_OPERATEURS[recu.paiement.operateur] || recu.paiement.operateur})</>}
+              {' '}— {t(`paiement.${recu.paiement?.statut || 'non_paye'}`)}
               {recu.paiement?.reference && <> — {t('recu.reference')} {recu.paiement.reference}</>}
             </p>
             <p className="mt-8 text-center text-sm text-ardoise">{t('recu.merci')}</p>

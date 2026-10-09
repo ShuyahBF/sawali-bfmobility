@@ -10,7 +10,7 @@ import presence_sawali
 import version_plateforme
 from config import get_settings
 from db import creer_index
-from routes import admin, auth, chauffeur, courses, public
+from routes import admin, auth, chauffeur, courses, paiements, public
 from seed import initialiser
 
 reglages = get_settings()
@@ -40,6 +40,7 @@ api.include_router(auth.router)
 api.include_router(public.router)
 api.include_router(courses.router)
 api.include_router(chauffeur.router)
+api.include_router(paiements.router)   # lot 2 : paiement en ligne (avant admin : routes plus précises)
 api.include_router(admin.router)
 app.include_router(api)
 
@@ -50,3 +51,4 @@ async def demarrage() -> None:
     await creer_index()
     await initialiser()
     asyncio.create_task(presence_sawali.boucle_presence())
+    asyncio.create_task(paiements.boucle_rapprochement())   # lot 2 : finalise les paiements en ligne en attente

@@ -70,7 +70,20 @@
 /* La carte reste sous les menus et fenêtres du site */
 .leaflet-container { font-family: inherit; z-index: 0; }
 
-/* --- Impression (reçu) : on n'imprime que le contenu utile --- */
+/* --- Sécurité de l'interface : appui long et sélection interdits sur les médias et la carte --- */
+img, video, .leaflet-container {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* --- Impression bloquée partout (page blanche)… --- */
+@media print {
+  html:not(.impression-autorisee) body { display: none !important; }
+}
+
+/* --- …sauf sur le reçu (classe posée par ProtectionEcran) : contenu utile seulement --- */
 @media print {
   .no-print { display: none !important; }
   body { background: #fff !important; }

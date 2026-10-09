@@ -75,3 +75,46 @@ Listes : `GET /admin/<ressource>?q=&limite=` ; création `POST`, modification `P
 - `GET /admin/alertes` → `[{type:"maintenance"|"stock"|"document"|"autonomie", gravite:"info"|"attention"|"urgent", message, vehicule_id?, piece_id?}]`
 - `GET /admin/tableau-de-bord` → `{courses_jour, chiffre_jour, chiffre_mois, courses_mois, vehicules:{total, disponibles, en_service, maintenance}, chauffeurs_en_ligne, note_moyenne, energie_mois:{cout, kwh, litres}, maintenance_mois, alertes, par_categorie:[{categorie, courses, chiffre}], par_energie:[{energie, km, cout_energie}], courses_7j:[{jour, courses, chiffre}]}`
 - `GET /admin/parametres` / `PATCH /admin/parametres` (admin) : `{nom, slogan, pays, devise, langue, fuseau, unite_distance, vitesse_moyenne_kmh, facteur_route, majoration_nuit_pct, nuit_debut, nuit_fin, commission_pct, telephone_support, email_support}`
+
+---
+# Lot 2 — compléments
+
+## Configuration publique (champs ajoutés)
+`GET /public/config` renvoie aussi :
+`paiements_en_ligne: {mobile_money: bool, carte: bool, especes: true}` (moyens réellement configurés) et
+`connexion_par_code: bool` (connexion par code WhatsApp disponible).
+
+## Estimation (champs ajoutés)
+`POST /public/estimation` renvoie aussi `trace: [[lat,lng],…] | null` (itinéraire routier à dessiner sur la carte)
+et `source_distance: "route" | "estimation" | "aucune"`. La course créée garde ce `trace`.
+
+## Connexion par code WhatsApp (sans mot de passe)
+- `POST /auth/otp/demande` `{telephone}` → `{envoye, canal:"whatsapp"|"sms", compte_existant, duree_min}`
+  (429 si redemandé avant 1 min ou plus de 5 codes/heure ; 503 si aucun canal d'envoi configuré)
+- `POST /auth/otp/verification` `{telephone, code, nom?}` → `{jeton, utilisateur}` ; `nom` obligatoire si `compte_existant` était faux (422 sinon).
+
+## Paiement en ligne
+- `GET /paiements/moyens` → `{mobile_money, carte, especes}`
+- `POST /paiements/courses/{id}/mobile-money` `{telephone?}` → `{reference, adresse}` : rediriger le navigateur vers `adresse` (page pawaPay)
+- `POST /paiements/courses/{id}/carte` → `{reference, adresse}` : rediriger vers `adresse` (Stripe Checkout)
+- Retour sur le site : `/courses/{id}?paiement={reference}` (ou `?paiement=annule`) → appeler
+  `GET /paiements/{reference}?rafraichir=true` → `{statut:"initie"|"en_attente"|"en_cours"|"paye"|"echec"|"montant_incoherent", moyen, montant, devise, message?}` ;
+  réinterroger toutes les 4 s tant que `en_attente`/`en_cours` (max 2 min), puis recharger la course.
+- Une **course** se paie en ligne quand elle est `terminee` (prix définitif) ; une **location** (heure/jour) dès la commande. Sinon 409.
+- 503 si l'opérateur n'est pas configuré (le site masque alors le bouton grâce à `paiements_en_ligne`).
+
+## Courses (actions ajoutées)
+- `POST /courses/{id}/relancer` (client) : relance la recherche dans un rayon élargi (statut `recherche` seulement, sinon 409).
+- `POST /courses/{id}/refuser` (chauffeur) : retire la course de ses propositions → `{ok:true}`.
+- `POST /courses/{id}/liberer` `{motif?}` (chauffeur affecté, avant `en_cours`) : la course repart en `recherche` → course.
+
+## Candidatures chauffeurs
+- `POST /public/candidatures` `{nom, telephone, ville?, experience_annees?, permis_numero?, vehicule_personnel?, message?}` → `{ok:true}` (409 si déjà déposée aujourd'hui)
+- Back-office : ressource générique `candidatures` (`statut: nouvelle|contactee|acceptee|refusee`, `note_interne`).
+
+## Paramètres (champs ajoutés)
+`itineraire_routier: bool`, `notifications_whatsapp: bool`, `rayon_recherche_km: number`.
+
+## Notifications WhatsApp (automatiques, rien à appeler)
+Client prévenu : chauffeur en route (avec lien de suivi), chauffeur arrivé, course terminée (avec lien du reçu),
+chauffeur désisté (recherche d'un autre), course annulée par la société, réservation enregistrée.

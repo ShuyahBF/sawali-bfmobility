@@ -2,26 +2,28 @@
 // Configurations des écrans de gestion du back-office (utilisées par TableauCrud)
 // Une entrée par ressource de l'API /admin/<ressource>.
 // configRessource(nom, contexte) renvoie la configuration adaptée au rôle.
-//   contexte = { role, categories, monnaie }
+//   contexte = { role, categories, monnaie, t, langue }
+// Tous les textes passent par t('adm.…') (traductions dans src/i18n/admin/).
 // ============================================================================
 import BadgeEnergie from '@/composants/BadgeEnergie.jsx'
 import { formatDate, formatDateHeure } from '@/lib/format.js'
 
-// --- Listes de choix réutilisées
-const opts = (paires) => paires.map(([valeur, libelle]) => ({ valeur, libelle }))
-export const ENERGIES = opts([['electrique', '⚡ Électrique'], ['hybride', '🔋 Hybride'], ['thermique', '⛽ Thermique']])
-const STATUTS_VEHICULE = opts([['disponible', 'Disponible'], ['en_service', 'En service'], ['maintenance', 'Maintenance'], ['hors_service', 'Hors service']])
-const ROLES = opts([['gestionnaire', 'Gestionnaire'], ['chauffeur', 'Chauffeur'], ['mecanicien', 'Mécanicien'], ['client', 'Client']])
-const TYPES_ENERGIE = opts([['recharge', 'Recharge électrique'], ['carburant', 'Plein de carburant']])
-const TYPES_INTERVENTION = opts([['entretien', 'Entretien'], ['reparation', 'Réparation'], ['controle', 'Contrôle']])
-const STATUTS_INTERVENTION = opts([['planifiee', 'Planifiée'], ['en_cours', 'En cours'], ['terminee', 'Terminée']])
-const STATUTS_COMMANDE = opts([['brouillon', 'Brouillon'], ['envoyee', 'Envoyée'], ['recue', 'Reçue'], ['annulee', 'Annulée']])
-const MOYENS = opts([['virement', 'Virement'], ['especes', 'Espèces'], ['mobile_money', 'Mobile money'], ['cheque', 'Chèque'], ['carte', 'Carte']])
+// --- Listes de choix : valeurs de l'API ; le libellé est traduit (clé adm.opt.<valeur>)
+const VALEURS = {
+  energies: ['electrique', 'hybride', 'thermique'],
+  statutsVehicule: ['disponible', 'en_service', 'maintenance', 'hors_service'],
+  roles: ['gestionnaire', 'chauffeur', 'mecanicien', 'client'],
+  typesEnergie: ['recharge', 'carburant'],
+  typesIntervention: ['entretien', 'reparation', 'controle'],
+  statutsIntervention: ['planifiee', 'en_cours', 'terminee'],
+  statutsCommande: ['brouillon', 'envoyee', 'recue', 'annulee'],
+  moyens: ['virement', 'especes', 'mobile_money', 'cheque', 'carte'],
+  statutsCandidature: ['nouvelle', 'contactee', 'acceptee', 'refusee'],
+}
+// Icônes devant les énergies dans les menus
+const ICONES_ENERGIE = { electrique: '⚡ ', hybride: '🔋 ', thermique: '⛽ ' }
 
-// Libellé d'une option à partir de sa valeur
-const libelleDe = (liste, v) => liste.find((o) => o.valeur === v)?.libelle || v || '—'
-
-// --- Pastille colorée générique (statuts)
+// --- Pastille colorée générique (statuts) : le texte accompagne toujours la couleur
 function Pastille({ texte, ton = 'gris' }) {
   const tons = {
     vert: 'bg-volt-100 text-volt-700',
@@ -35,11 +37,11 @@ function Pastille({ texte, ton = 'gris' }) {
 }
 
 // Date d'échéance colorée : rouge si dépassée, ambre si < 30 jours
-function Echeance({ iso }) {
+function Echeance({ iso, langue }) {
   if (!iso) return <span className="text-ardoise">—</span>
   const jours = (new Date(iso) - Date.now()) / 86400000
   const classe = jours < 0 ? 'font-bold text-red-600' : jours < 30 ? 'font-bold text-ambre-600' : ''
-  return <span className={classe}>{formatDate(iso)}</span>
+  return <span className={classe}>{formatDate(iso, langue)}</span>
 }
 
 // --- Libellés des objets référencés (menus déroulants et colonnes)
@@ -56,55 +58,62 @@ const refs = (...noms) => Object.fromEntries(noms.map((n) => [n, REF[n]]))
 // ============================================================================
 // Construction de la configuration d'une ressource
 // ============================================================================
-export function configRessource(nom, { role, categories = [], monnaie = (n) => n }) {
+export function configRessource(nom, { role, categories = [], monnaie = (n) => n, t = (k) => k, langue = 'fr' }) {
   const direction = role === 'admin' || role === 'gestionnaire'
-  const optionsCategories = categories.map((c) => ({ valeur: c.code, libelle: c.nom }))
+  // Raccourcis de traduction : colonne / champ (adm.c.*), option (adm.opt.*)
+  const c = (cle) => t(`adm.c.${cle}`)
+  const opts = (liste, icones = {}) => VALEURS[liste].map((v) => ({ valeur: v, libelle: `${icones[v] || ''}${t(`adm.opt.${v}`)}` }))
+  const libelleOpt = (v) => (v ? t(`adm.opt.${v}`) : '—')
+  const optionsCategories = categories.map((x) => ({ valeur: x.code, libelle: x.nom }))
+  const libelleCategorie = (code) => optionsCategories.find((o) => o.valeur === code)?.libelle || code || '—'
   const argent = (cle) => (l) => <span className="tabular-nums">{monnaie(l[cle])}</span>
+  const ENERGIES = opts('energies', ICONES_ENERGIE)
+  const ROLES = role === 'admin' ? [{ valeur: 'admin', libelle: t('adm.opt.admin') }, ...opts('roles')] : opts('roles')
+  const titre = (cle) => ({ titre: t(`adm.${cle}.titre`), description: t(`adm.${cle}.description`) })
 
   switch (nom) {
     // ------------------------------------------------------------------ Parc
     case 'vehicules':
       return {
         ressource: 'vehicules',
-        titre: 'Parc de véhicules',
-        description: 'Énergie, immatriculation, confort, kilométrage, statut et échéances des documents.',
+        ...titre('vehicules'),
         ecriture: direction,
         refs: refs('utilisateurs'),
-        filtres: [{ cle: 'statut', libelle: 'Statut', options: STATUTS_VEHICULE }],
+        filtres: [{ cle: 'statut', libelle: c('statut'), options: opts('statutsVehicule') }],
         defaut: { statut: 'disponible', energie: 'electrique', places: 4, kilometrage: 0, confort: [] },
         colonnes: [
-          { cle: 'immatriculation', libelle: 'Immatriculation', rendu: (l) => <span className="font-mono font-bold">{l.immatriculation}</span> },
-          { cle: 'modele', libelle: 'Véhicule', rendu: (l) => `${l.marque || ''} ${l.modele || ''}${l.annee ? ` (${l.annee})` : ''}` },
-          { cle: 'energie', libelle: 'Énergie', rendu: (l) => <BadgeEnergie energie={l.energie} /> },
-          { cle: 'categorie', libelle: 'Catégorie', rendu: (l) => libelleDe(optionsCategories, l.categorie) },
-          { cle: 'kilometrage', libelle: 'Km', classe: 'text-right tabular-nums', rendu: (l) => Number(l.kilometrage || 0).toLocaleString('fr') },
+          { cle: 'immatriculation', libelle: c('immatriculation'), rendu: (l) => <span className="font-mono font-bold">{l.immatriculation}</span> },
+          { cle: 'modele', libelle: c('vehicule'), rendu: (l) => `${l.marque || ''} ${l.modele || ''}${l.annee ? ` (${l.annee})` : ''}` },
+          { cle: 'energie', libelle: c('energie'), rendu: (l) => <BadgeEnergie energie={l.energie} /> },
+          { cle: 'categorie', libelle: c('categorie'), rendu: (l) => libelleCategorie(l.categorie) },
+          { cle: 'kilometrage', libelle: c('km'), classe: 'text-right tabular-nums', rendu: (l) => Number(l.kilometrage || 0).toLocaleString(langue) },
           {
-            cle: 'statut', libelle: 'Statut',
-            rendu: (l) => <Pastille texte={libelleDe(STATUTS_VEHICULE, l.statut)} ton={{ disponible: 'vert', en_service: 'nuit', maintenance: 'ambre', hors_service: 'rouge' }[l.statut]} />,
+            cle: 'statut', libelle: c('statut'),
+            rendu: (l) => <Pastille texte={libelleOpt(l.statut)} ton={{ disponible: 'vert', en_service: 'nuit', maintenance: 'ambre', hors_service: 'rouge' }[l.statut]} />,
           },
-          { cle: 'chauffeur_id', libelle: 'Chauffeur', rendu: (l, a) => a.ref('utilisateurs', l.chauffeur_id) },
-          { cle: 'assurance_expire', libelle: 'Assurance', rendu: (l) => <Echeance iso={l.assurance_expire} /> },
-          { cle: 'controle_technique_expire', libelle: 'Contrôle tech.', rendu: (l) => <Echeance iso={l.controle_technique_expire} /> },
+          { cle: 'chauffeur_id', libelle: c('chauffeur'), rendu: (l, a) => a.ref('utilisateurs', l.chauffeur_id) },
+          { cle: 'assurance_expire', libelle: c('assurance'), rendu: (l) => <Echeance iso={l.assurance_expire} langue={langue} /> },
+          { cle: 'controle_technique_expire', libelle: c('controleTech'), rendu: (l) => <Echeance iso={l.controle_technique_expire} langue={langue} /> },
         ],
         champs: [
-          { cle: 'immatriculation', libelle: 'Immatriculation', requis: true },
-          { cle: 'energie', libelle: 'Énergie', type: 'select', options: ENERGIES, requis: true },
-          { cle: 'marque', libelle: 'Marque', requis: true },
-          { cle: 'modele', libelle: 'Modèle', requis: true },
-          { cle: 'annee', libelle: 'Année', type: 'nombre' },
-          { cle: 'couleur', libelle: 'Couleur' },
-          { cle: 'categorie', libelle: 'Catégorie', type: 'select', options: optionsCategories, requis: true },
-          { cle: 'places', libelle: 'Places', type: 'nombre' },
-          { cle: 'confort', libelle: 'Confort', type: 'liste', aide: 'Séparés par des virgules : climatisation, wifi, chargeur…', large: true },
-          { cle: 'autonomie_km', libelle: 'Autonomie (km)', type: 'nombre', visible: (f) => f.energie !== 'thermique' },
-          { cle: 'capacite_batterie_kwh', libelle: 'Batterie (kWh)', type: 'nombre', visible: (f) => f.energie !== 'thermique' },
-          { cle: 'reservoir_l', libelle: 'Réservoir (L)', type: 'nombre', visible: (f) => f.energie !== 'electrique' },
-          { cle: 'kilometrage', libelle: 'Kilométrage', type: 'nombre' },
-          { cle: 'statut', libelle: 'Statut', type: 'select', options: STATUTS_VEHICULE },
-          { cle: 'chauffeur_id', libelle: 'Chauffeur attitré', type: 'ref', ref: 'utilisateurs' },
-          { cle: 'assurance_expire', libelle: 'Assurance valable jusqu’au', type: 'date' },
-          { cle: 'controle_technique_expire', libelle: 'Contrôle technique jusqu’au', type: 'date' },
-          { cle: 'photo_url', libelle: 'Adresse de la photo', large: true },
+          { cle: 'immatriculation', libelle: c('immatriculation'), requis: true },
+          { cle: 'energie', libelle: c('energie'), type: 'select', options: ENERGIES, requis: true },
+          { cle: 'marque', libelle: c('marque'), requis: true },
+          { cle: 'modele', libelle: c('modele'), requis: true },
+          { cle: 'annee', libelle: c('annee'), type: 'nombre' },
+          { cle: 'couleur', libelle: c('couleur') },
+          { cle: 'categorie', libelle: c('categorie'), type: 'select', options: optionsCategories, requis: true },
+          { cle: 'places', libelle: c('places'), type: 'nombre' },
+          { cle: 'confort', libelle: c('confort'), type: 'liste', aide: t('adm.aide.confort'), large: true },
+          { cle: 'autonomie_km', libelle: c('autonomie'), type: 'nombre', visible: (f) => f.energie !== 'thermique' },
+          { cle: 'capacite_batterie_kwh', libelle: c('batterie'), type: 'nombre', visible: (f) => f.energie !== 'thermique' },
+          { cle: 'reservoir_l', libelle: c('reservoir'), type: 'nombre', visible: (f) => f.energie !== 'electrique' },
+          { cle: 'kilometrage', libelle: c('kilometrage'), type: 'nombre' },
+          { cle: 'statut', libelle: c('statut'), type: 'select', options: opts('statutsVehicule') },
+          { cle: 'chauffeur_id', libelle: c('chauffeurAttitre'), type: 'ref', ref: 'utilisateurs' },
+          { cle: 'assurance_expire', libelle: c('assuranceJusquau'), type: 'date' },
+          { cle: 'controle_technique_expire', libelle: c('controleJusquau'), type: 'date' },
+          { cle: 'photo_url', libelle: c('photo'), large: true },
         ],
       }
 
@@ -112,43 +121,42 @@ export function configRessource(nom, { role, categories = [], monnaie = (n) => n
     case 'categories':
       return {
         ressource: 'categories',
-        titre: 'Catégories et tarifs',
-        description: 'Prix au km, à la minute, à l’heure et à la journée ; prise en charge, minimum et promotion.',
+        ...titre('categories'),
         ecriture: direction,
         defaut: { actif: true, energies: ['electrique'], places: 4, ordre: 1 },
         // Promotion : sans pourcentage, on envoie « pas de promo »
-        avantEnvoi: (c) => ({ ...c, promo: c.promo?.pourcentage ? c.promo : null }),
+        avantEnvoi: (x) => ({ ...x, promo: x.promo?.pourcentage ? x.promo : null }),
         colonnes: [
-          { cle: 'ordre', libelle: 'Ordre', classe: 'tabular-nums' },
-          { cle: 'nom', libelle: 'Catégorie', rendu: (l) => <><b>{l.nom}</b> <span className="text-ardoise">({l.code})</span></> },
-          { cle: 'energies', libelle: 'Énergies', rendu: (l) => <span className="flex flex-wrap gap-1">{(l.energies || []).map((e) => <BadgeEnergie key={e} energie={e} />)}</span> },
-          { cle: 'prix_km', libelle: 'Km', classe: 'text-right', rendu: argent('prix_km') },
-          { cle: 'prix_minute', libelle: 'Minute', classe: 'text-right', rendu: argent('prix_minute') },
-          { cle: 'prix_heure', libelle: 'Heure', classe: 'text-right', rendu: argent('prix_heure') },
-          { cle: 'prix_jour', libelle: 'Jour', classe: 'text-right', rendu: argent('prix_jour') },
-          { cle: 'minimum', libelle: 'Minimum', classe: 'text-right', rendu: argent('minimum') },
-          { cle: 'promo', libelle: 'Promo', rendu: (l) => (l.promo?.pourcentage ? <Pastille texte={`−${l.promo.pourcentage} %`} ton="ambre" /> : '—') },
-          { cle: 'actif', libelle: 'Active', rendu: (l) => (l.actif ? <Pastille texte="Oui" ton="vert" /> : <Pastille texte="Non" />) },
+          { cle: 'ordre', libelle: c('ordre'), classe: 'tabular-nums' },
+          { cle: 'nom', libelle: c('categorie'), rendu: (l) => <><b>{l.nom}</b> <span className="text-ardoise">({l.code})</span></> },
+          { cle: 'energies', libelle: c('energies'), rendu: (l) => <span className="flex flex-wrap gap-1">{(l.energies || []).map((e) => <BadgeEnergie key={e} energie={e} />)}</span> },
+          { cle: 'prix_km', libelle: c('km'), classe: 'text-right', rendu: argent('prix_km') },
+          { cle: 'prix_minute', libelle: c('minute'), classe: 'text-right', rendu: argent('prix_minute') },
+          { cle: 'prix_heure', libelle: c('heure'), classe: 'text-right', rendu: argent('prix_heure') },
+          { cle: 'prix_jour', libelle: c('jour'), classe: 'text-right', rendu: argent('prix_jour') },
+          { cle: 'minimum', libelle: c('minimum'), classe: 'text-right', rendu: argent('minimum') },
+          { cle: 'promo', libelle: c('promo'), rendu: (l) => (l.promo?.pourcentage ? <Pastille texte={`−${l.promo.pourcentage} %`} ton="ambre" /> : '—') },
+          { cle: 'actif', libelle: c('active'), rendu: (l) => (l.actif ? <Pastille texte={t('commun.oui')} ton="vert" /> : <Pastille texte={t('commun.non')} />) },
         ],
         champs: [
-          { cle: 'code', libelle: 'Code', requis: true, aide: 'Court et sans espace (ex. eco, confort, van).' },
-          { cle: 'nom', libelle: 'Nom affiché', requis: true },
-          { cle: 'description', libelle: 'Description', type: 'zone' },
-          { cle: 'energies', libelle: 'Énergies', type: 'liste', aide: 'electrique, hybride, thermique' },
-          { cle: 'confort', libelle: 'Confort', type: 'liste' },
-          { cle: 'places', libelle: 'Places', type: 'nombre' },
-          { cle: 'ordre', libelle: 'Ordre d’affichage', type: 'nombre' },
-          { cle: 'prise_en_charge', libelle: 'Prise en charge', type: 'nombre' },
-          { cle: 'minimum', libelle: 'Prix minimum', type: 'nombre' },
-          { cle: 'prix_km', libelle: 'Prix au km', type: 'nombre', requis: true },
-          { cle: 'prix_minute', libelle: 'Prix à la minute', type: 'nombre' },
-          { cle: 'prix_heure', libelle: 'Prix à l’heure', type: 'nombre' },
-          { cle: 'prix_jour', libelle: 'Prix à la journée', type: 'nombre' },
-          { cle: 'promo.pourcentage', libelle: 'Promo : réduction (%)', type: 'nombre' },
-          { cle: 'promo.libelle', libelle: 'Promo : libellé' },
-          { cle: 'promo.debut', libelle: 'Promo : début', type: 'date' },
-          { cle: 'promo.fin', libelle: 'Promo : fin', type: 'date' },
-          { cle: 'actif', libelle: 'Catégorie proposée aux clients', type: 'case' },
+          { cle: 'code', libelle: c('code'), requis: true, aide: t('adm.aide.code') },
+          { cle: 'nom', libelle: c('nomAffiche'), requis: true },
+          { cle: 'description', libelle: c('description'), type: 'zone' },
+          { cle: 'energies', libelle: c('energies'), type: 'liste', aide: 'electrique, hybride, thermique' },
+          { cle: 'confort', libelle: c('confort'), type: 'liste' },
+          { cle: 'places', libelle: c('places'), type: 'nombre' },
+          { cle: 'ordre', libelle: c('ordreAffichage'), type: 'nombre' },
+          { cle: 'prise_en_charge', libelle: c('priseEnCharge'), type: 'nombre' },
+          { cle: 'minimum', libelle: c('prixMinimum'), type: 'nombre' },
+          { cle: 'prix_km', libelle: c('prixKm'), type: 'nombre', requis: true },
+          { cle: 'prix_minute', libelle: c('prixMinute'), type: 'nombre' },
+          { cle: 'prix_heure', libelle: c('prixHeure'), type: 'nombre' },
+          { cle: 'prix_jour', libelle: c('prixJour'), type: 'nombre' },
+          { cle: 'promo.pourcentage', libelle: c('promoPct'), type: 'nombre' },
+          { cle: 'promo.libelle', libelle: c('promoLibelle') },
+          { cle: 'promo.debut', libelle: c('promoDebut'), type: 'date' },
+          { cle: 'promo.fin', libelle: c('promoFin'), type: 'date' },
+          { cle: 'actif', libelle: c('categorieProposee'), type: 'case' },
         ],
       }
 
@@ -156,34 +164,33 @@ export function configRessource(nom, { role, categories = [], monnaie = (n) => n
     case 'utilisateurs':
       return {
         ressource: 'utilisateurs',
-        titre: 'Utilisateurs',
-        description: 'Chauffeurs, mécaniciens, gestionnaires et clients.',
+        ...titre('utilisateurs'),
         ecriture: direction,
         refs: refs('vehicules'),
-        filtres: [{ cle: 'role', libelle: 'Rôle', options: role === 'admin' ? [{ valeur: 'admin', libelle: 'Admin' }, ...ROLES] : ROLES }],
+        filtres: [{ cle: 'role', libelle: c('role'), options: ROLES }],
         defaut: { role: 'chauffeur', actif: true },
         // Les informations « chauffeur » ne sont envoyées que pour un chauffeur
-        avantEnvoi: (c) => { const r = { ...c }; if (r.role !== 'chauffeur') delete r.chauffeur; return r },
+        avantEnvoi: (x) => { const r = { ...x }; if (r.role !== 'chauffeur') delete r.chauffeur; return r },
         colonnes: [
-          { cle: 'nom', libelle: 'Nom', rendu: (l) => <b>{l.nom}</b> },
-          { cle: 'telephone', libelle: 'Téléphone' },
-          { cle: 'email', libelle: 'E-mail' },
-          { cle: 'role', libelle: 'Rôle', rendu: (l) => <Pastille texte={l.role} ton={{ admin: 'nuit', gestionnaire: 'bleu', chauffeur: 'vert', mecanicien: 'ambre' }[l.role] || 'gris'} /> },
-          { cle: 'en_ligne', libelle: 'En ligne', rendu: (l) => (l.role === 'chauffeur' ? (l.chauffeur?.en_ligne ? <Pastille texte="En ligne" ton="vert" /> : <Pastille texte="Hors ligne" />) : '—') },
-          { cle: 'note', libelle: 'Note', rendu: (l) => (l.chauffeur?.note_moyenne != null ? `★ ${Number(l.chauffeur.note_moyenne).toFixed(1)} (${l.chauffeur.nb_notes || 0})` : '—') },
-          { cle: 'permis', libelle: 'Permis', rendu: (l) => (l.chauffeur ? <Echeance iso={l.chauffeur.permis_expire} /> : '—') },
-          { cle: 'actif', libelle: 'Actif', rendu: (l) => (l.actif ? 'Oui' : <Pastille texte="Désactivé" ton="rouge" />) },
+          { cle: 'nom', libelle: c('nom'), rendu: (l) => <b>{l.nom}</b> },
+          { cle: 'telephone', libelle: c('telephone') },
+          { cle: 'email', libelle: c('email') },
+          { cle: 'role', libelle: c('role'), rendu: (l) => <Pastille texte={libelleOpt(l.role)} ton={{ admin: 'nuit', gestionnaire: 'bleu', chauffeur: 'vert', mecanicien: 'ambre' }[l.role] || 'gris'} /> },
+          { cle: 'en_ligne', libelle: c('enLigne'), rendu: (l) => (l.role === 'chauffeur' ? (l.chauffeur?.en_ligne ? <Pastille texte={t('chf.enLigne')} ton="vert" /> : <Pastille texte={t('chf.horsLigne')} />) : '—') },
+          { cle: 'note', libelle: c('note'), rendu: (l) => (l.chauffeur?.note_moyenne != null ? `★ ${Number(l.chauffeur.note_moyenne).toFixed(1)} (${l.chauffeur.nb_notes || 0})` : '—') },
+          { cle: 'permis', libelle: c('permis'), rendu: (l) => (l.chauffeur ? <Echeance iso={l.chauffeur.permis_expire} langue={langue} /> : '—') },
+          { cle: 'actif', libelle: c('actif'), rendu: (l) => (l.actif ? t('commun.oui') : <Pastille texte={t('adm.opt.desactive')} ton="rouge" />) },
         ],
         champs: [
-          { cle: 'nom', libelle: 'Nom complet', requis: true },
-          { cle: 'telephone', libelle: 'Téléphone', requis: true },
-          { cle: 'email', libelle: 'E-mail' },
-          { cle: 'role', libelle: 'Rôle', type: 'select', requis: true, options: role === 'admin' ? [{ valeur: 'admin', libelle: 'Admin' }, ...ROLES] : ROLES },
-          { cle: 'mot_de_passe', libelle: 'Mot de passe', type: 'motdepasse', aide: 'Obligatoire à la création ; vide = inchangé en modification.' },
-          { cle: 'actif', libelle: 'Compte actif', type: 'case' },
-          { cle: 'chauffeur.permis_numero', libelle: 'N° de permis', visible: (f) => f.role === 'chauffeur' },
-          { cle: 'chauffeur.permis_expire', libelle: 'Permis valable jusqu’au', type: 'date', visible: (f) => f.role === 'chauffeur' },
-          { cle: 'chauffeur.vehicule_id', libelle: 'Véhicule', type: 'ref', ref: 'vehicules', visible: (f) => f.role === 'chauffeur' },
+          { cle: 'nom', libelle: c('nomComplet'), requis: true },
+          { cle: 'telephone', libelle: c('telephone'), requis: true },
+          { cle: 'email', libelle: c('email') },
+          { cle: 'role', libelle: c('role'), type: 'select', requis: true, options: ROLES },
+          { cle: 'mot_de_passe', libelle: c('motDePasse'), type: 'motdepasse', aide: t('adm.aide.motDePasse') },
+          { cle: 'actif', libelle: c('compteActif'), type: 'case' },
+          { cle: 'chauffeur.permis_numero', libelle: c('permisNumero'), visible: (f) => f.role === 'chauffeur' },
+          { cle: 'chauffeur.permis_expire', libelle: c('permisJusquau'), type: 'date', visible: (f) => f.role === 'chauffeur' },
+          { cle: 'chauffeur.vehicule_id', libelle: c('vehicule'), type: 'ref', ref: 'vehicules', visible: (f) => f.role === 'chauffeur' },
         ],
       }
 
@@ -191,29 +198,28 @@ export function configRessource(nom, { role, categories = [], monnaie = (n) => n
     case 'energie':
       return {
         ressource: 'energie',
-        titre: 'Énergie',
-        description: 'Recharges électriques et pleins de carburant. Chaque saisie met à jour le kilométrage du véhicule.',
+        ...titre('energie'),
         ecriture: direction,
         refs: refs('vehicules'),
-        filtres: [{ cle: 'type', libelle: 'Type', options: TYPES_ENERGIE }],
+        filtres: [{ cle: 'type', libelle: c('type'), options: opts('typesEnergie') }],
         defaut: { type: 'recharge' },
         colonnes: [
-          { cle: 'le', libelle: 'Date', rendu: (l) => formatDateHeure(l.le) },
-          { cle: 'vehicule_id', libelle: 'Véhicule', rendu: (l, a) => a.ref('vehicules', l.vehicule_id) },
-          { cle: 'type', libelle: 'Type', rendu: (l) => (l.type === 'recharge' ? '⚡ Recharge' : '⛽ Carburant') },
-          { cle: 'quantite', libelle: 'Quantité', classe: 'text-right tabular-nums', rendu: (l) => `${l.quantite} ${l.type === 'recharge' ? 'kWh' : 'L'}` },
-          { cle: 'cout', libelle: 'Coût', classe: 'text-right', rendu: argent('cout') },
-          { cle: 'kilometrage', libelle: 'Km compteur', classe: 'text-right tabular-nums' },
-          { cle: 'station', libelle: 'Station' },
+          { cle: 'le', libelle: c('date'), rendu: (l) => formatDateHeure(l.le, langue) },
+          { cle: 'vehicule_id', libelle: c('vehicule'), rendu: (l, a) => a.ref('vehicules', l.vehicule_id) },
+          { cle: 'type', libelle: c('type'), rendu: (l) => `${l.type === 'recharge' ? '⚡' : '⛽'} ${libelleOpt(l.type)}` },
+          { cle: 'quantite', libelle: c('quantite'), classe: 'text-right tabular-nums', rendu: (l) => `${l.quantite} ${l.type === 'recharge' ? 'kWh' : 'L'}` },
+          { cle: 'cout', libelle: c('cout'), classe: 'text-right', rendu: argent('cout') },
+          { cle: 'kilometrage', libelle: c('kmCompteur'), classe: 'text-right tabular-nums' },
+          { cle: 'station', libelle: c('station') },
         ],
         champs: [
-          { cle: 'vehicule_id', libelle: 'Véhicule', type: 'ref', ref: 'vehicules', requis: true, large: true },
-          { cle: 'type', libelle: 'Type', type: 'select', options: TYPES_ENERGIE, requis: true },
-          { cle: 'le', libelle: 'Date et heure', type: 'dateheure' },
-          { cle: 'quantite', libelle: 'Quantité (kWh ou L)', type: 'nombre', requis: true },
-          { cle: 'cout', libelle: 'Coût', type: 'nombre', requis: true },
-          { cle: 'kilometrage', libelle: 'Kilométrage', type: 'nombre', requis: true },
-          { cle: 'station', libelle: 'Station' },
+          { cle: 'vehicule_id', libelle: c('vehicule'), type: 'ref', ref: 'vehicules', requis: true, large: true },
+          { cle: 'type', libelle: c('type'), type: 'select', options: opts('typesEnergie'), requis: true },
+          { cle: 'le', libelle: c('dateHeure'), type: 'dateheure' },
+          { cle: 'quantite', libelle: c('quantiteUnite'), type: 'nombre', requis: true },
+          { cle: 'cout', libelle: c('cout'), type: 'nombre', requis: true },
+          { cle: 'kilometrage', libelle: c('kilometrage'), type: 'nombre', requis: true },
+          { cle: 'station', libelle: c('station') },
         ],
       }
 
@@ -221,27 +227,26 @@ export function configRessource(nom, { role, categories = [], monnaie = (n) => n
     case 'plans':
       return {
         ressource: 'plans',
-        titre: 'Plans de maintenance',
-        description: 'Entretiens périodiques par véhicule ou par énergie : tous les X km ou tous les X jours.',
+        ...titre('plans'),
         ecriture: true,
         refs: refs('vehicules', 'pieces'),
         colonnes: [
-          { cle: 'libelle', libelle: 'Plan', rendu: (l) => <b>{l.libelle}</b> },
-          { cle: 'vehicule_id', libelle: 'Véhicule', rendu: (l, a) => (l.vehicule_id ? a.ref('vehicules', l.vehicule_id) : 'Tous') },
-          { cle: 'energie', libelle: 'Énergie', rendu: (l) => (l.energie ? <BadgeEnergie energie={l.energie} /> : '—') },
-          { cle: 'intervalle', libelle: 'Intervalle', rendu: (l) => [l.intervalle_km && `${l.intervalle_km} km`, l.intervalle_jours && `${l.intervalle_jours} j`].filter(Boolean).join(' ou ') || '—' },
-          { cle: 'dernier', libelle: 'Dernière fois', rendu: (l) => [l.dernier_km != null && `${l.dernier_km} km`, l.derniere_date && formatDate(l.derniere_date)].filter(Boolean).join(', ') || '—' },
-          { cle: 'piece_id', libelle: 'Pièce', rendu: (l, a) => (l.piece_id ? a.ref('pieces', l.piece_id) : '—') },
+          { cle: 'libelle', libelle: c('plan'), rendu: (l) => <b>{l.libelle}</b> },
+          { cle: 'vehicule_id', libelle: c('vehicule'), rendu: (l, a) => (l.vehicule_id ? a.ref('vehicules', l.vehicule_id) : t('adm.opt.tous')) },
+          { cle: 'energie', libelle: c('energie'), rendu: (l) => (l.energie ? <BadgeEnergie energie={l.energie} /> : '—') },
+          { cle: 'intervalle', libelle: c('intervalle'), rendu: (l) => [l.intervalle_km && `${l.intervalle_km} km`, l.intervalle_jours && t('adm.jours', { n: l.intervalle_jours })].filter(Boolean).join(` ${t('adm.ou')} `) || '—' },
+          { cle: 'dernier', libelle: c('derniereFois'), rendu: (l) => [l.dernier_km != null && `${l.dernier_km} km`, l.derniere_date && formatDate(l.derniere_date, langue)].filter(Boolean).join(', ') || '—' },
+          { cle: 'piece_id', libelle: c('piece'), rendu: (l, a) => (l.piece_id ? a.ref('pieces', l.piece_id) : '—') },
         ],
         champs: [
-          { cle: 'libelle', libelle: 'Libellé', requis: true, large: true },
-          { cle: 'vehicule_id', libelle: 'Véhicule (vide = tous)', type: 'ref', ref: 'vehicules' },
-          { cle: 'energie', libelle: 'Énergie concernée', type: 'select', options: ENERGIES },
-          { cle: 'intervalle_km', libelle: 'Tous les … km', type: 'nombre' },
-          { cle: 'intervalle_jours', libelle: 'Tous les … jours', type: 'nombre' },
-          { cle: 'dernier_km', libelle: 'Dernier entretien (km)', type: 'nombre' },
-          { cle: 'derniere_date', libelle: 'Dernier entretien (date)', type: 'date' },
-          { cle: 'piece_id', libelle: 'Pièce habituelle', type: 'ref', ref: 'pieces' },
+          { cle: 'libelle', libelle: c('libelle'), requis: true, large: true },
+          { cle: 'vehicule_id', libelle: c('vehiculeTous'), type: 'ref', ref: 'vehicules' },
+          { cle: 'energie', libelle: c('energieConcernee'), type: 'select', options: ENERGIES },
+          { cle: 'intervalle_km', libelle: c('intervalleKm'), type: 'nombre' },
+          { cle: 'intervalle_jours', libelle: c('intervalleJours'), type: 'nombre' },
+          { cle: 'dernier_km', libelle: c('dernierKm'), type: 'nombre' },
+          { cle: 'derniere_date', libelle: c('derniereDate'), type: 'date' },
+          { cle: 'piece_id', libelle: c('pieceHabituelle'), type: 'ref', ref: 'pieces' },
         ],
       }
 
@@ -249,49 +254,48 @@ export function configRessource(nom, { role, categories = [], monnaie = (n) => n
     case 'interventions':
       return {
         ressource: 'interventions',
-        titre: 'Interventions',
-        description: 'Travaux des mécaniciens. Terminer une intervention retire les pièces du stock et remet le plan à zéro.',
+        ...titre('interventions'),
         ecriture: true,
         refs: refs('vehicules', 'pieces', 'utilisateurs', 'plans'),
-        filtres: [{ cle: 'statut', libelle: 'Statut', options: STATUTS_INTERVENTION }],
+        filtres: [{ cle: 'statut', libelle: c('statut'), options: opts('statutsIntervention') }],
         defaut: { type: 'entretien', statut: 'planifiee', pieces: [], main_oeuvre: 0 },
         actions: [
           {
-            libelle: 'Terminer',
+            libelle: t('adm.action.terminer'),
             visible: (l) => l.statut !== 'terminee',
             executer: async (l, { api, toast, recharger, attente }) => {
-              if (!window.confirm('Terminer cette intervention ? Les pièces seront retirées du stock.')) return
+              if (!window.confirm(t('adm.action.terminerConfirmer'))) return
               await attente(api.patch(`/admin/interventions/${l.id}`, { statut: 'terminee' }))
-              toast.succes('Intervention terminée.')
+              toast.succes(t('adm.action.termineeOk'))
               recharger()
             },
           },
         ],
         colonnes: [
-          { cle: 'le', libelle: 'Date', rendu: (l) => formatDate(l.le) },
-          { cle: 'vehicule_id', libelle: 'Véhicule', rendu: (l, a) => a.ref('vehicules', l.vehicule_id) },
-          { cle: 'type', libelle: 'Type', rendu: (l) => libelleDe(TYPES_INTERVENTION, l.type) },
-          { cle: 'description', libelle: 'Description', rendu: (l) => <span className="line-clamp-2 max-w-xs">{l.description}</span> },
-          { cle: 'pieces', libelle: 'Pièces', rendu: (l) => (l.pieces?.length ? `${l.pieces.length} réf.` : '—') },
-          { cle: 'main_oeuvre', libelle: 'Main-d’œuvre', classe: 'text-right', rendu: argent('main_oeuvre') },
-          { cle: 'mecanicien_id', libelle: 'Mécanicien', rendu: (l, a) => a.ref('utilisateurs', l.mecanicien_id) },
-          { cle: 'statut', libelle: 'Statut', rendu: (l) => <Pastille texte={libelleDe(STATUTS_INTERVENTION, l.statut)} ton={{ planifiee: 'bleu', en_cours: 'ambre', terminee: 'vert' }[l.statut]} /> },
+          { cle: 'le', libelle: c('date'), rendu: (l) => formatDate(l.le, langue) },
+          { cle: 'vehicule_id', libelle: c('vehicule'), rendu: (l, a) => a.ref('vehicules', l.vehicule_id) },
+          { cle: 'type', libelle: c('type'), rendu: (l) => libelleOpt(l.type) },
+          { cle: 'description', libelle: c('description'), rendu: (l) => <span className="line-clamp-2 max-w-xs">{l.description}</span> },
+          { cle: 'pieces', libelle: c('pieces'), rendu: (l) => (l.pieces?.length ? t('adm.references', { n: l.pieces.length }) : '—') },
+          { cle: 'main_oeuvre', libelle: c('mainOeuvre'), classe: 'text-right', rendu: argent('main_oeuvre') },
+          { cle: 'mecanicien_id', libelle: c('mecanicien'), rendu: (l, a) => a.ref('utilisateurs', l.mecanicien_id) },
+          { cle: 'statut', libelle: c('statut'), rendu: (l) => <Pastille texte={libelleOpt(l.statut)} ton={{ planifiee: 'bleu', en_cours: 'ambre', terminee: 'vert' }[l.statut]} /> },
         ],
         champs: [
-          { cle: 'vehicule_id', libelle: 'Véhicule', type: 'ref', ref: 'vehicules', requis: true },
-          { cle: 'type', libelle: 'Type', type: 'select', options: TYPES_INTERVENTION, requis: true },
-          { cle: 'description', libelle: 'Description', type: 'zone', requis: true },
-          { cle: 'kilometrage', libelle: 'Kilométrage', type: 'nombre' },
-          { cle: 'le', libelle: 'Date', type: 'dateheure' },
-          { cle: 'mecanicien_id', libelle: 'Mécanicien', type: 'ref', ref: 'utilisateurs' },
-          { cle: 'plan_id', libelle: 'Plan de maintenance', type: 'ref', ref: 'plans' },
-          { cle: 'main_oeuvre', libelle: 'Main-d’œuvre', type: 'nombre' },
-          { cle: 'statut', libelle: 'Statut', type: 'select', options: STATUTS_INTERVENTION },
+          { cle: 'vehicule_id', libelle: c('vehicule'), type: 'ref', ref: 'vehicules', requis: true },
+          { cle: 'type', libelle: c('type'), type: 'select', options: opts('typesIntervention'), requis: true },
+          { cle: 'description', libelle: c('description'), type: 'zone', requis: true },
+          { cle: 'kilometrage', libelle: c('kilometrage'), type: 'nombre' },
+          { cle: 'le', libelle: c('date'), type: 'dateheure' },
+          { cle: 'mecanicien_id', libelle: c('mecanicien'), type: 'ref', ref: 'utilisateurs' },
+          { cle: 'plan_id', libelle: c('planMaintenance'), type: 'ref', ref: 'plans' },
+          { cle: 'main_oeuvre', libelle: c('mainOeuvre'), type: 'nombre' },
+          { cle: 'statut', libelle: c('statut'), type: 'select', options: opts('statutsIntervention') },
           {
-            cle: 'pieces', libelle: 'Pièces utilisées', type: 'lignes',
+            cle: 'pieces', libelle: c('piecesUtilisees'), type: 'lignes',
             sousChamps: [
-              { cle: 'piece_id', libelle: 'Pièce', type: 'ref', ref: 'pieces', requis: true },
-              { cle: 'quantite', libelle: 'Qté', type: 'nombre', requis: true },
+              { cle: 'piece_id', libelle: c('piece'), type: 'ref', ref: 'pieces', requis: true },
+              { cle: 'quantite', libelle: c('qte'), type: 'nombre', requis: true },
             ],
           },
         ],
@@ -301,48 +305,54 @@ export function configRessource(nom, { role, categories = [], monnaie = (n) => n
     case 'pieces':
       return {
         ressource: 'pieces',
-        titre: 'Pièces détachées',
-        description: 'Stock, seuil d’alerte, prix et emplacement. « Mouvement » ajoute ou retire du stock avec un motif.',
+        ...titre('pieces'),
         ecriture: true,
         refs: refs('fournisseurs'),
         defaut: { quantite: 0, seuil_alerte: 1, compatibilites: [] },
         actions: [
           {
-            libelle: 'Mouvement',
-            executer: async (l, { api, toast, recharger, attente }) => {
-              const q = window.prompt(`Quantité à ajouter (+) ou retirer (−) pour « ${l.nom} » :`, '1')
-              if (q === null || q.trim() === '' || Number.isNaN(Number(q))) return
-              const motif = window.prompt('Motif du mouvement :', Number(q) > 0 ? 'Entrée en stock' : 'Sortie')
-              if (motif === null) return
-              await attente(api.post(`/admin/pieces/${l.id}/mouvement`, { quantite: Number(q), motif }))
-              toast.succes('Stock mis à jour.')
-              recharger()
+            // Mouvement de stock : vraie modale (quantité ± et motif), plus de window.prompt
+            libelle: t('adm.action.mouvement'),
+            formulaire: {
+              titre: (l) => t('adm.mouvement.titre', { nom: l.nom }),
+              defaut: () => ({ quantite: 1, motif: '' }),
+              champs: [
+                { cle: 'quantite', libelle: t('adm.mouvement.quantite'), type: 'nombre', requis: true, pas: 1, aide: t('adm.mouvement.aide') },
+                { cle: 'motif', libelle: t('adm.mouvement.motif'), requis: true },
+              ],
+              envoyer: async (l, valeurs, { api, toast, recharger, attente }) => {
+                // Quantité nulle : message et la modale reste ouverte (renvoi de false)
+                if (!valeurs.quantite) { toast.erreur(t('adm.mouvement.zero')); return false }
+                await attente(api.post(`/admin/pieces/${l.id}/mouvement`, { quantite: valeurs.quantite, motif: valeurs.motif }))
+                toast.succes(t('adm.mouvement.ok'))
+                recharger()
+              },
             },
           },
         ],
         colonnes: [
-          { cle: 'reference', libelle: 'Référence', rendu: (l) => <span className="font-mono">{l.reference}</span> },
-          { cle: 'nom', libelle: 'Pièce', rendu: (l) => <b>{l.nom}</b> },
-          { cle: 'categorie', libelle: 'Catégorie' },
+          { cle: 'reference', libelle: c('reference'), rendu: (l) => <span className="font-mono">{l.reference}</span> },
+          { cle: 'nom', libelle: c('piece'), rendu: (l) => <b>{l.nom}</b> },
+          { cle: 'categorie', libelle: c('categorie') },
           {
-            cle: 'quantite', libelle: 'Stock', classe: 'text-right tabular-nums',
+            cle: 'quantite', libelle: c('stock'), classe: 'text-right tabular-nums',
             rendu: (l) => <span className={Number(l.quantite) <= Number(l.seuil_alerte) ? 'font-bold text-red-600' : ''}>{l.quantite}</span>,
           },
-          { cle: 'seuil_alerte', libelle: 'Seuil', classe: 'text-right tabular-nums' },
-          { cle: 'prix_unitaire', libelle: 'Prix unitaire', classe: 'text-right', rendu: argent('prix_unitaire') },
-          { cle: 'fournisseur_id', libelle: 'Fournisseur', rendu: (l, a) => a.ref('fournisseurs', l.fournisseur_id) },
-          { cle: 'emplacement', libelle: 'Emplacement' },
+          { cle: 'seuil_alerte', libelle: c('seuil'), classe: 'text-right tabular-nums' },
+          { cle: 'prix_unitaire', libelle: c('prixUnitaire'), classe: 'text-right', rendu: argent('prix_unitaire') },
+          { cle: 'fournisseur_id', libelle: c('fournisseur'), rendu: (l, a) => a.ref('fournisseurs', l.fournisseur_id) },
+          { cle: 'emplacement', libelle: c('emplacement') },
         ],
         champs: [
-          { cle: 'reference', libelle: 'Référence', requis: true },
-          { cle: 'nom', libelle: 'Nom', requis: true },
-          { cle: 'categorie', libelle: 'Catégorie' },
-          { cle: 'emplacement', libelle: 'Emplacement' },
-          { cle: 'compatibilites', libelle: 'Compatible avec', type: 'liste', large: true, aide: 'Modèles séparés par des virgules.' },
-          { cle: 'quantite', libelle: 'Quantité en stock', type: 'nombre' },
-          { cle: 'seuil_alerte', libelle: 'Seuil d’alerte', type: 'nombre' },
-          { cle: 'prix_unitaire', libelle: 'Prix unitaire', type: 'nombre' },
-          { cle: 'fournisseur_id', libelle: 'Fournisseur', type: 'ref', ref: 'fournisseurs' },
+          { cle: 'reference', libelle: c('reference'), requis: true },
+          { cle: 'nom', libelle: c('nom'), requis: true },
+          { cle: 'categorie', libelle: c('categorie') },
+          { cle: 'emplacement', libelle: c('emplacement') },
+          { cle: 'compatibilites', libelle: c('compatibilites'), type: 'liste', large: true, aide: t('adm.aide.compatibilites') },
+          { cle: 'quantite', libelle: c('quantiteStock'), type: 'nombre' },
+          { cle: 'seuil_alerte', libelle: c('seuilAlerte'), type: 'nombre' },
+          { cle: 'prix_unitaire', libelle: c('prixUnitaire'), type: 'nombre' },
+          { cle: 'fournisseur_id', libelle: c('fournisseur'), type: 'ref', ref: 'fournisseurs' },
         ],
       }
 
@@ -350,26 +360,25 @@ export function configRessource(nom, { role, categories = [], monnaie = (n) => n
     case 'fournisseurs':
       return {
         ressource: 'fournisseurs',
-        titre: 'Fournisseurs',
-        description: 'Coordonnées, conditions de paiement et solde (commandes reçues moins paiements).',
+        ...titre('fournisseurs'),
         ecriture: direction,
         colonnes: [
-          { cle: 'nom', libelle: 'Fournisseur', rendu: (l) => <b>{l.nom}</b> },
-          { cle: 'contact', libelle: 'Contact' },
-          { cle: 'telephone', libelle: 'Téléphone' },
-          { cle: 'pays', libelle: 'Pays' },
-          { cle: 'total_commandes', libelle: 'Commandes', classe: 'text-right', rendu: argent('total_commandes') },
-          { cle: 'total_paye', libelle: 'Payé', classe: 'text-right', rendu: argent('total_paye') },
-          { cle: 'solde', libelle: 'Solde', classe: 'text-right', rendu: (l) => <b className={Number(l.solde) > 0 ? 'text-ambre-600' : ''}>{monnaie(l.solde)}</b> },
+          { cle: 'nom', libelle: c('fournisseur'), rendu: (l) => <b>{l.nom}</b> },
+          { cle: 'contact', libelle: c('contact') },
+          { cle: 'telephone', libelle: c('telephone') },
+          { cle: 'pays', libelle: c('pays') },
+          { cle: 'total_commandes', libelle: c('commandes'), classe: 'text-right', rendu: argent('total_commandes') },
+          { cle: 'total_paye', libelle: c('paye'), classe: 'text-right', rendu: argent('total_paye') },
+          { cle: 'solde', libelle: c('solde'), classe: 'text-right', rendu: (l) => <b className={Number(l.solde) > 0 ? 'text-ambre-600' : ''}>{monnaie(l.solde)}</b> },
         ],
         champs: [
-          { cle: 'nom', libelle: 'Nom', requis: true },
-          { cle: 'contact', libelle: 'Personne à contacter' },
-          { cle: 'telephone', libelle: 'Téléphone' },
-          { cle: 'email', libelle: 'E-mail' },
-          { cle: 'adresse', libelle: 'Adresse', large: true },
-          { cle: 'pays', libelle: 'Pays' },
-          { cle: 'conditions_paiement', libelle: 'Conditions de paiement' },
+          { cle: 'nom', libelle: c('nom'), requis: true },
+          { cle: 'contact', libelle: c('personneContact') },
+          { cle: 'telephone', libelle: c('telephone') },
+          { cle: 'email', libelle: c('email') },
+          { cle: 'adresse', libelle: c('adresse'), large: true },
+          { cle: 'pays', libelle: c('pays') },
+          { cle: 'conditions_paiement', libelle: c('conditionsPaiement') },
         ],
       }
 
@@ -377,44 +386,43 @@ export function configRessource(nom, { role, categories = [], monnaie = (n) => n
     case 'commandes':
       return {
         ressource: 'commandes',
-        titre: 'Commandes fournisseurs',
-        description: '« Recevoir » une commande ajoute ses pièces au stock.',
+        ...titre('commandes'),
         ecriture: direction,
         refs: refs('fournisseurs', 'pieces'),
-        filtres: [{ cle: 'statut', libelle: 'Statut', options: STATUTS_COMMANDE }],
+        filtres: [{ cle: 'statut', libelle: c('statut'), options: opts('statutsCommande') }],
         defaut: { statut: 'brouillon', lignes: [] },
         actions: direction ? [
           {
-            libelle: 'Recevoir',
+            libelle: t('adm.action.recevoir'),
             visible: (l) => l.statut === 'envoyee' || l.statut === 'brouillon',
             executer: async (l, { api, toast, recharger, attente }) => {
-              if (!window.confirm(`Réceptionner la commande ${l.numero || ''} ? Les pièces seront ajoutées au stock.`)) return
+              if (!window.confirm(t('adm.action.recevoirConfirmer', { numero: l.numero || '' }))) return
               await attente(api.post(`/admin/commandes/${l.id}/recevoir`))
-              toast.succes('Commande reçue, stock mis à jour.')
+              toast.succes(t('adm.action.recueOk'))
               recharger()
             },
           },
         ] : [],
         colonnes: [
-          { cle: 'numero', libelle: 'N°', rendu: (l) => <span className="font-mono font-bold">{l.numero || `#${l.id}`}</span> },
-          { cle: 'fournisseur_id', libelle: 'Fournisseur', rendu: (l, a) => a.ref('fournisseurs', l.fournisseur_id) },
-          { cle: 'lignes', libelle: 'Lignes', rendu: (l) => l.lignes?.length || 0 },
-          { cle: 'total', libelle: 'Total', classe: 'text-right', rendu: argent('total') },
-          { cle: 'statut', libelle: 'Statut', rendu: (l) => <Pastille texte={libelleDe(STATUTS_COMMANDE, l.statut)} ton={{ brouillon: 'gris', envoyee: 'bleu', recue: 'vert', annulee: 'rouge' }[l.statut]} /> },
-          { cle: 'note', libelle: 'Note' },
+          { cle: 'numero', libelle: c('numero'), rendu: (l) => <span className="font-mono font-bold">{l.numero || `#${l.id}`}</span> },
+          { cle: 'fournisseur_id', libelle: c('fournisseur'), rendu: (l, a) => a.ref('fournisseurs', l.fournisseur_id) },
+          { cle: 'lignes', libelle: c('lignes'), rendu: (l) => l.lignes?.length || 0 },
+          { cle: 'total', libelle: c('total'), classe: 'text-right', rendu: argent('total') },
+          { cle: 'statut', libelle: c('statut'), rendu: (l) => <Pastille texte={libelleOpt(l.statut)} ton={{ brouillon: 'gris', envoyee: 'bleu', recue: 'vert', annulee: 'rouge' }[l.statut]} /> },
+          { cle: 'note', libelle: c('note') },
         ],
         champs: [
-          { cle: 'fournisseur_id', libelle: 'Fournisseur', type: 'ref', ref: 'fournisseurs', requis: true },
-          { cle: 'statut', libelle: 'Statut', type: 'select', options: STATUTS_COMMANDE.filter((o) => o.valeur !== 'recue') },
+          { cle: 'fournisseur_id', libelle: c('fournisseur'), type: 'ref', ref: 'fournisseurs', requis: true },
+          { cle: 'statut', libelle: c('statut'), type: 'select', options: opts('statutsCommande').filter((o) => o.valeur !== 'recue') },
           {
-            cle: 'lignes', libelle: 'Lignes de la commande', type: 'lignes',
+            cle: 'lignes', libelle: c('lignesCommande'), type: 'lignes',
             sousChamps: [
-              { cle: 'piece_id', libelle: 'Pièce', type: 'ref', ref: 'pieces', requis: true },
-              { cle: 'quantite', libelle: 'Qté', type: 'nombre', requis: true },
-              { cle: 'prix_unitaire', libelle: 'Prix u.', type: 'nombre' },
+              { cle: 'piece_id', libelle: c('piece'), type: 'ref', ref: 'pieces', requis: true },
+              { cle: 'quantite', libelle: c('qte'), type: 'nombre', requis: true },
+              { cle: 'prix_unitaire', libelle: c('prixU'), type: 'nombre' },
             ],
           },
-          { cle: 'note', libelle: 'Note', type: 'zone' },
+          { cle: 'note', libelle: c('note'), type: 'zone' },
         ],
       }
 
@@ -422,26 +430,59 @@ export function configRessource(nom, { role, categories = [], monnaie = (n) => n
     case 'paiements-fournisseurs':
       return {
         ressource: 'paiements-fournisseurs',
-        titre: 'Paiements fournisseurs',
-        description: 'Règlements des fournisseurs ; le solde de chaque fournisseur est recalculé.',
+        ...titre('paiements'),
         ecriture: direction,
         refs: refs('fournisseurs', 'commandes'),
         defaut: { moyen: 'virement' },
         colonnes: [
-          { cle: 'le', libelle: 'Date', rendu: (l) => formatDate(l.le) },
-          { cle: 'fournisseur_id', libelle: 'Fournisseur', rendu: (l, a) => a.ref('fournisseurs', l.fournisseur_id) },
-          { cle: 'commande_id', libelle: 'Commande', rendu: (l, a) => (l.commande_id ? a.ref('commandes', l.commande_id) : '—') },
-          { cle: 'montant', libelle: 'Montant', classe: 'text-right', rendu: argent('montant') },
-          { cle: 'moyen', libelle: 'Moyen', rendu: (l) => libelleDe(MOYENS, l.moyen) },
-          { cle: 'reference', libelle: 'Référence' },
+          { cle: 'le', libelle: c('date'), rendu: (l) => formatDate(l.le, langue) },
+          { cle: 'fournisseur_id', libelle: c('fournisseur'), rendu: (l, a) => a.ref('fournisseurs', l.fournisseur_id) },
+          { cle: 'commande_id', libelle: c('commande'), rendu: (l, a) => (l.commande_id ? a.ref('commandes', l.commande_id) : '—') },
+          { cle: 'montant', libelle: c('montant'), classe: 'text-right', rendu: argent('montant') },
+          { cle: 'moyen', libelle: c('moyen'), rendu: (l) => libelleOpt(l.moyen) },
+          { cle: 'reference', libelle: c('reference') },
         ],
         champs: [
-          { cle: 'fournisseur_id', libelle: 'Fournisseur', type: 'ref', ref: 'fournisseurs', requis: true },
-          { cle: 'commande_id', libelle: 'Commande (facultatif)', type: 'ref', ref: 'commandes' },
-          { cle: 'montant', libelle: 'Montant', type: 'nombre', requis: true },
-          { cle: 'moyen', libelle: 'Moyen', type: 'select', options: MOYENS, requis: true },
-          { cle: 'reference', libelle: 'Référence' },
-          { cle: 'le', libelle: 'Date', type: 'date' },
+          { cle: 'fournisseur_id', libelle: c('fournisseur'), type: 'ref', ref: 'fournisseurs', requis: true },
+          { cle: 'commande_id', libelle: c('commandeFacultatif'), type: 'ref', ref: 'commandes' },
+          { cle: 'montant', libelle: c('montant'), type: 'nombre', requis: true },
+          { cle: 'moyen', libelle: c('moyen'), type: 'select', options: opts('moyens'), requis: true },
+          { cle: 'reference', libelle: c('reference') },
+          { cle: 'le', libelle: c('date'), type: 'date' },
+        ],
+      }
+
+    // ------------------------------------------------------------------ Candidatures (lot 2)
+    case 'candidatures':
+      return {
+        ressource: 'candidatures',
+        ...titre('candidatures'),
+        ecriture: direction,
+        filtres: [{ cle: 'statut', libelle: c('statut'), options: opts('statutsCandidature') }],
+        defaut: { statut: 'nouvelle' },
+        colonnes: [
+          { cle: 'cree_le', libelle: c('recueLe'), rendu: (l) => formatDateHeure(l.cree_le, langue) },
+          { cle: 'nom', libelle: c('nom'), rendu: (l) => <b>{l.nom}</b> },
+          { cle: 'telephone', libelle: c('telephone'), rendu: (l) => <a href={`tel:${l.telephone}`} onClick={(e) => e.stopPropagation()} className="text-nuit-600 underline">{l.telephone}</a> },
+          { cle: 'ville', libelle: c('ville') },
+          { cle: 'experience_annees', libelle: c('experience'), classe: 'text-right tabular-nums', rendu: (l) => (l.experience_annees != null ? t('adm.ans', { n: l.experience_annees }) : '—') },
+          { cle: 'vehicule_personnel', libelle: c('vehiculePerso') },
+          {
+            cle: 'statut', libelle: c('statut'),
+            rendu: (l) => <Pastille texte={libelleOpt(l.statut)} ton={{ nouvelle: 'ambre', contactee: 'bleu', acceptee: 'vert', refusee: 'rouge' }[l.statut]} />,
+          },
+          { cle: 'note_interne', libelle: c('noteInterne'), rendu: (l) => <span className="line-clamp-2 max-w-xs">{l.note_interne || '—'}</span> },
+        ],
+        champs: [
+          { cle: 'nom', libelle: c('nom'), requis: true },
+          { cle: 'telephone', libelle: c('telephone'), requis: true },
+          { cle: 'ville', libelle: c('ville') },
+          { cle: 'experience_annees', libelle: c('experienceAns'), type: 'nombre', min: 0, pas: 1 },
+          { cle: 'permis_numero', libelle: c('permisNumero') },
+          { cle: 'vehicule_personnel', libelle: c('vehiculePerso') },
+          { cle: 'message', libelle: c('messageCandidat'), type: 'zone' },
+          { cle: 'statut', libelle: c('statut'), type: 'select', options: opts('statutsCandidature'), requis: true },
+          { cle: 'note_interne', libelle: c('noteInterne'), type: 'zone', aide: t('adm.aide.noteInterne') },
         ],
       }
 

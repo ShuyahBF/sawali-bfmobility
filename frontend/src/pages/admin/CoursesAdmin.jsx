@@ -1,6 +1,7 @@
 // ============================================================================
 // Courses (back-office) : liste filtrée par statut, détail de la course
 // sélectionnée et affectation manuelle d'un chauffeur. Rafraîchi toutes les 15 s.
+// Textes traduits (clés adm.courses.*) ; itinéraire routier sur la carte (lot 2).
 // ============================================================================
 import { useCallback, useEffect, useState } from 'react'
 import Carte from '@/composants/Carte.jsx'
@@ -18,7 +19,7 @@ const STATUTS = ['planifiee', 'recherche', 'acceptee', 'en_approche', 'arrivee',
 const AFFECTABLES = ['planifiee', 'recherche', 'acceptee']
 
 export default function CoursesAdmin() {
-  const { t } = useLangue()
+  const { t, langue } = useLangue()
   const { monnaie, distance } = useConfig()
   const toast = useToasts()
   const [statut, setStatut] = useState('')
@@ -61,7 +62,7 @@ export default function CoursesAdmin() {
   const validerAffectation = async () => {
     try {
       await toast.attente(api.post(`/admin/courses/${selection.id}/affecter`, { chauffeur_id: Number.isNaN(Number(chauffeurId)) ? chauffeurId : Number(chauffeurId) }))
-      toast.succes('Chauffeur affecté.')
+      toast.succes(t('adm.courses.affecte'))
       setAffecter(false)
       charger(true)
     } catch (err) {
@@ -76,11 +77,11 @@ export default function CoursesAdmin() {
     <div>
       <header className="mb-4 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-bold">Courses</h1>
-          <p className="text-sm text-ardoise">Cliquez sur une course pour voir le détail et affecter un chauffeur.</p>
+          <h1 className="font-display text-2xl font-bold">{t('adm.menu.courses')}</h1>
+          <p className="text-sm text-ardoise">{t('adm.courses.description')}</p>
         </div>
-        <select value={statut} onChange={(e) => setStatut(e.target.value)} className="champ w-auto" aria-label="Statut">
-          <option value="">Tous les statuts</option>
+        <select value={statut} onChange={(e) => setStatut(e.target.value)} className="champ w-auto" aria-label={t('adm.c.statut')}>
+          <option value="">{t('adm.courses.tousStatuts')}</option>
           {STATUTS.map((s) => <option key={s} value={s}>{t(`statut.${s}`)}</option>)}
         </select>
       </header>
@@ -90,15 +91,18 @@ export default function CoursesAdmin() {
         <div className="overflow-x-auto rounded-2xl bg-white ring-1 ring-nuit/10">
           <table className="tableau">
             <thead>
-              <tr><th>N°</th><th>Date</th><th>Client</th><th>Catégorie</th><th>Chauffeur</th><th className="text-right">Prix</th><th>Statut</th></tr>
+              <tr>
+                <th>{t('adm.c.numero')}</th><th>{t('adm.c.date')}</th><th>{t('chf.client')}</th><th>{t('adm.c.categorie')}</th>
+                <th>{t('adm.c.chauffeur')}</th><th className="text-right">{t('suivi.prix')}</th><th>{t('adm.c.statut')}</th>
+              </tr>
             </thead>
             <tbody>
               {courses === null && <tr><td colSpan={7} className="py-10 text-center"><span className="inline-block"><Jauge /></span></td></tr>}
-              {courses?.length === 0 && <tr><td colSpan={7} className="py-10 text-center text-ardoise">Aucune course.</td></tr>}
+              {courses?.length === 0 && <tr><td colSpan={7} className="py-10 text-center text-ardoise">{t('adm.courses.aucune')}</td></tr>}
               {courses?.map((x) => (
                 <tr key={x.id} aria-selected={x.id === c?.id} onClick={() => setSelection(x)} className="cursor-pointer">
                   <td className="font-mono font-bold">{x.numero}</td>
-                  <td className="whitespace-nowrap">{formatDateHeure(x.quand || x.cree_le)}</td>
+                  <td className="whitespace-nowrap">{formatDateHeure(x.quand || x.cree_le, langue)}</td>
                   <td>{x.client?.nom}</td>
                   <td>{x.categorie}</td>
                   <td>{x.chauffeur?.nom || <span className="text-ardoise">—</span>}</td>
@@ -112,26 +116,26 @@ export default function CoursesAdmin() {
 
         {/* Détail */}
         <aside className="surface h-fit space-y-4 xl:sticky xl:top-6">
-          {!c && <p className="text-ardoise">Sélectionnez une course dans la liste.</p>}
+          {!c && <p className="text-ardoise">{t('adm.courses.selectionner')}</p>}
           {c && (
             <>
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-xl font-bold">{c.numero}</h2>
                 <PastilleStatut statut={c.statut} />
               </div>
-              <Carte depart={c.depart} arrivee={c.arrivee} chauffeur={c.chauffeur?.position} hauteur="h-56" />
+              <Carte depart={c.depart} arrivee={c.arrivee} chauffeur={c.chauffeur?.position} trace={c.trace} hauteur="h-56" />
               <div className="space-y-1 text-sm">
                 <p className="truncate"><b className="text-volt-700">A</b> {c.depart?.adresse}</p>
                 {c.arrivee && <p className="truncate"><b className="text-ambre-600">B</b> {c.arrivee.adresse}</p>}
                 <p className="text-ardoise">{t(`cmd.mode.${c.mode}`)}{c.distance_km ? ` — ${distance(c.distance_km)}` : ''} — {t(`cmd.${c.paiement?.moyen}`)} ({t(`paiement.${c.paiement?.statut || 'non_paye'}`)})</p>
-                <p>Client : <b>{c.client?.nom}</b> {c.client?.telephone && <a href={`tel:${c.client.telephone}`} className="text-nuit-600 underline">{c.client.telephone}</a>}</p>
-                {c.chauffeur && <p>Chauffeur : <b>{c.chauffeur.nom}</b> {c.chauffeur.telephone && <a href={`tel:${c.chauffeur.telephone}`} className="text-nuit-600 underline">{c.chauffeur.telephone}</a>}</p>}
-                {c.vehicule && <p>Véhicule : {c.vehicule.marque} {c.vehicule.modele} <span className="font-mono">{c.vehicule.immatriculation}</span></p>}
+                <p>{t('chf.client')} : <b>{c.client?.nom}</b> {c.client?.telephone && <a href={`tel:${c.client.telephone}`} className="text-nuit-600 underline">{c.client.telephone}</a>}</p>
+                {c.chauffeur && <p>{t('adm.c.chauffeur')} : <b>{c.chauffeur.nom}</b> {c.chauffeur.telephone && <a href={`tel:${c.chauffeur.telephone}`} className="text-nuit-600 underline">{c.chauffeur.telephone}</a>}</p>}
+                {c.vehicule && <p>{t('adm.c.vehicule')} : {c.vehicule.marque} {c.vehicule.modele} <span className="font-mono">{c.vehicule.immatriculation}</span></p>}
                 {c.note_client && <p className="rounded-xl bg-ambre-50 p-2">« {c.note_client} »</p>}
               </div>
               <FriseStatuts course={c} />
               {AFFECTABLES.includes(c.statut) && (
-                <button type="button" onClick={ouvrirAffectation} className="btn-principal w-full">{c.chauffeur ? 'Changer de chauffeur' : 'Affecter un chauffeur'}</button>
+                <button type="button" onClick={ouvrirAffectation} className="btn-principal w-full">{c.chauffeur ? t('adm.courses.changer') : t('adm.courses.affecter')}</button>
               )}
             </>
           )}
@@ -139,22 +143,22 @@ export default function CoursesAdmin() {
       </div>
 
       {/* Choix du chauffeur */}
-      <Modale titre="Affecter un chauffeur" ouverte={affecter} onFermer={() => setAffecter(false)}>
+      <Modale titre={t('adm.courses.affecter')} ouverte={affecter} onFermer={() => setAffecter(false)}>
         <ul className="max-h-80 space-y-1 overflow-y-auto">
-          {chauffeurs.length === 0 && <li className="text-ardoise">Aucun chauffeur actif.</li>}
+          {chauffeurs.length === 0 && <li className="text-ardoise">{t('adm.courses.aucunChauffeur')}</li>}
           {chauffeurs.map((u) => (
             <li key={u.id}>
               <label className={`flex cursor-pointer items-center gap-3 rounded-xl p-3 ring-1 ${String(chauffeurId) === String(u.id) ? 'bg-volt-50 ring-volt-500' : 'ring-nuit/10'}`}>
                 <input type="radio" name="chauffeur" value={u.id} checked={String(chauffeurId) === String(u.id)} onChange={() => setChauffeurId(u.id)} className="accent-volt-600" />
                 <span className="flex-1 font-bold">{u.nom}</span>
-                <span className={`text-xs font-bold ${u.chauffeur?.en_ligne ? 'text-volt-700' : 'text-ardoise'}`}>{u.chauffeur?.en_ligne ? 'En ligne' : 'Hors ligne'}</span>
+                <span className={`text-xs font-bold ${u.chauffeur?.en_ligne ? 'text-volt-700' : 'text-ardoise'}`}>{u.chauffeur?.en_ligne ? t('chf.enLigne') : t('chf.horsLigne')}</span>
               </label>
             </li>
           ))}
         </ul>
         <div className="mt-4 flex justify-end gap-2">
-          <button type="button" onClick={() => setAffecter(false)} className="btn-secondaire">Annuler</button>
-          <button type="button" disabled={!chauffeurId} onClick={validerAffectation} className="btn-principal">Affecter</button>
+          <button type="button" onClick={() => setAffecter(false)} className="btn-secondaire">{t('commun.annuler')}</button>
+          <button type="button" disabled={!chauffeurId} onClick={validerAffectation} className="btn-principal">{t('adm.courses.affecterBouton')}</button>
         </div>
       </Modale>
     </div>

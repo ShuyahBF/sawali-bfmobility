@@ -10,9 +10,19 @@ import fr from './fr.js'
 import en from './en.js'
 import es from './es.js'
 import pt from './pt.js'
+// Textes du back-office (lot 2), dans des fichiers séparés pour rester lisibles
+import adminFr from './admin/fr.js'
+import adminEn from './admin/en.js'
+import adminEs from './admin/es.js'
+import adminPt from './admin/pt.js'
 
-// Dictionnaires disponibles et leur nom affiché dans le sélecteur
-const DICTIONNAIRES = { fr, en, es, pt }
+// Dictionnaires disponibles (site + back-office réunis par langue)
+const DICTIONNAIRES = {
+  fr: { ...fr, ...adminFr },
+  en: { ...en, ...adminEn },
+  es: { ...es, ...adminEs },
+  pt: { ...pt, ...adminPt },
+}
 export const LANGUES = [
   { code: 'fr', nom: 'Français' },
   { code: 'en', nom: 'English' },
@@ -48,7 +58,7 @@ export function LangueProvider({ children }) {
 
   // Fonction de traduction
   const t = useCallback((cle, valeurs) => {
-    let texte = DICTIONNAIRES[langue]?.[cle] ?? fr[cle] ?? cle
+    let texte = DICTIONNAIRES[langue]?.[cle] ?? DICTIONNAIRES.fr[cle] ?? cle
     if (valeurs) {
       for (const [k, v] of Object.entries(valeurs)) texte = texte.replaceAll(`{${k}}`, String(v))
     }

@@ -15,9 +15,13 @@
 //   defaut      : valeurs d'un nouvel enregistrement
 //   versFormulaire(ligne) / avantEnvoi(formulaire) : conversions facultatives
 //   actions     : [{ libelle, visible?(ligne), executer(ligne, outils) }]
+//                 ou, pour une saisie (lot 2) : [{ libelle, visible?, formulaire: {
+//                   titre(ligne), champs:[…comme ci-dessus], defaut?(ligne),
+//                   envoyer(ligne, valeurs, outils) } }] → ouvre une modale
 //   filtres     : [{ cle, libelle, options:[{valeur, libelle}] }] → ?cle=valeur
 //   ecriture    : false → lecture seule (pas de création/modification/suppression)
 //   suppression : false → pas de bouton Supprimer
+// Tous les textes affichés passent par la traduction (clés « crud.* »).
 // ============================================================================
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import api, { messageErreur } from '@/lib/api.js'
@@ -25,6 +29,7 @@ import { useToasts } from './Toasts.jsx'
 import Modale from './Modale.jsx'
 import MotDePasse from './MotDePasse.jsx'
 import Jauge from './Jauge.jsx'
+import { useLangue } from '@/i18n/index.jsx'
 
 // --- Lecture / écriture d'une valeur par chemin pointé (« promo.pourcentage »)
 export function lire(objet, chemin) {
@@ -74,7 +79,10 @@ export default function TableauCrud({ config }) {
     entete,
   } = config
   const toast = useToasts()
+  const { t } = useLangue()
   const [lignes, setLignes] = useState([])
+  // Formulaire d'une action particulière (ex. mouvement de stock) : { action, ligne, valeurs }
+  const [saisieAction, setSaisieAction] = useState(null)
   const [charge, setCharge] = useState(false)
   const [recherche, setRecherche] = useState('')
   const [valeursFiltres, setValeursFiltres] = useState({})
@@ -154,7 +162,7 @@ export default function TableauCrud({ config }) {
         ? api.post(`/admin/${ressource}`, corps)
         : api.patch(`/admin/${ressource}/${formulaire.id}`, corps)
       await toast.attente(appel)
-      toast.succes(formulaire.id == null ? 'Ajouté.' : 'Modifications enregistrées.')
+      toast.succes(formulaire.id == null ? t('crud.ajoute') : t('crud.modifie'))
       setFormulaire(null)
       charger(true)
     } catch (err) {
@@ -166,10 +174,10 @@ export default function TableauCrud({ config }) {
 
   // --- Suppression après confirmation
   const supprimer = async (ligne) => {
-    if (!window.confirm('Supprimer définitivement cet élément ?')) return
+    if (!window.confirm(t('crud.confirmerSuppression'))) return
     try {
       await toast.attente(api.delete(`/admin/${ressource}/${ligne.id}`))
-      toast.succes('Supprimé.')
+      toast.succes(t('crud.supprime'))
       setSelection(null)
       charger(true)
     } catch (err) {
@@ -179,8 +187,31 @@ export default function TableauCrud({ config }) {
 
   // --- Action particulière (ex. « Recevoir » une commande)
   const lancerAction = async (action, ligne) => {
+    // Action avec saisie : on ouvre sa modale
+    if (action.formulaire) {
+      let valeurs = {}
+      const source = action.formulaire.defaut ? action.formulaire.defaut(ligne) : {}
+      action.formulaire.champs.forEach((c) => { valeurs = ecrire(valeurs, c.cle, versSaisie(c, lire(source, c.cle))) })
+      setSaisieAction({ action, ligne, valeurs })
+      return
+    }
     try {
       await action.executer(ligne, { api, toast, recharger: () => charger(true), attente: toast.attente })
+    } catch (err) {
+      toast.erreur(messageErreur(err))
+    }
+  }
+
+  // --- Validation de la modale d'une action avec saisie
+  const validerAction = async (e) => {
+    e.preventDefault()
+    const { action, ligne, valeurs } = saisieAction
+    let corps = {}
+    action.formulaire.champs.forEach((c) => { corps = ecrire(corps, c.cle, versApi(c, lire(valeurs, c.cle))) })
+    try {
+      // envoyer() renvoie false pour garder la modale ouverte (saisie à corriger)
+      const ok = await action.formulaire.envoyer(ligne, corps, { api, toast, recharger: () => charger(true), attente: toast.attente })
+      if (ok !== false) setSaisieAction(null)
     } catch (err) {
       toast.erreur(messageErreur(err))
     }
@@ -197,17 +228,17 @@ export default function TableauCrud({ config }) {
           {description && <p className="mt-1 max-w-prose text-sm text-ardoise">{description}</p>}
         </div>
         <label className="relative">
-          <span className="sr-only">Rechercher</span>
-          <input value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder="Rechercher…" className="champ w-56 pl-9" />
+          <span className="sr-only">{t('crud.rechercher')}</span>
+          <input value={recherche} onChange={(e) => setRecherche(e.target.value)} placeholder={t('crud.rechercherPh')} className="champ w-56 pl-9" />
           <svg className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ardoise" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="11" cy="11" r="7" /><path d="m20 20-3.5-3.5" /></svg>
         </label>
         {filtres.map((f) => (
           <select key={f.cle} value={valeursFiltres[f.cle] || ''} onChange={(e) => setValeursFiltres((v) => ({ ...v, [f.cle]: e.target.value }))} className="champ w-auto" aria-label={f.libelle}>
-            <option value="">{f.libelle} : tous</option>
+            <option value="">{t('crud.tous', { filtre: f.libelle })}</option>
             {f.options.map((o) => <option key={o.valeur} value={o.valeur}>{o.libelle}</option>)}
           </select>
         ))}
-        {ecriture && <button type="button" onClick={() => ouvrir(null)} className="btn-principal">+ Ajouter</button>}
+        {ecriture && <button type="button" onClick={() => ouvrir(null)} className="btn-principal">{t('crud.ajouter')}</button>}
       </header>
 
       {entete}
@@ -218,7 +249,7 @@ export default function TableauCrud({ config }) {
           <thead>
             <tr>
               {colonnes.map((c) => <th key={c.cle} className={c.classe}>{c.libelle}</th>)}
-              {avecActions && <th className="text-right">Actions</th>}
+              {avecActions && <th className="text-right">{t('crud.actions')}</th>}
             </tr>
           </thead>
           <tbody>
@@ -227,7 +258,7 @@ export default function TableauCrud({ config }) {
             )}
             {charge && lignes.length === 0 && (
               <tr><td colSpan={colonnes.length + 1} className="py-10 text-center text-ardoise">
-                Aucun élément.{ecriture && ' Utilisez « + Ajouter » pour créer le premier.'}
+                {t('crud.vide')}{ecriture && ` ${t('crud.videAjouter')}`}
               </td></tr>
             )}
             {lignes.map((l) => (
@@ -239,15 +270,15 @@ export default function TableauCrud({ config }) {
                 className="cursor-pointer"
               >
                 {colonnes.map((c) => (
-                  <td key={c.cle} className={c.classe}>{c.rendu ? c.rendu(l, aides) : affichageSimple(lire(l, c.cle))}</td>
+                  <td key={c.cle} className={c.classe}>{c.rendu ? c.rendu(l, aides) : affichageSimple(lire(l, c.cle), t)}</td>
                 ))}
                 {avecActions && (
                   <td className="whitespace-nowrap text-right">
                     {actions.filter((a) => !a.visible || a.visible(l)).map((a) => (
                       <button key={a.libelle} type="button" onClick={(e) => { e.stopPropagation(); lancerAction(a, l) }} className="lien-action">{a.libelle}</button>
                     ))}
-                    {ecriture && <button type="button" onClick={(e) => { e.stopPropagation(); ouvrir(l) }} className="lien-action">Modifier</button>}
-                    {ecriture && suppression && <button type="button" onClick={(e) => { e.stopPropagation(); supprimer(l) }} className="lien-action text-red-600">Supprimer</button>}
+                    {ecriture && <button type="button" onClick={(e) => { e.stopPropagation(); ouvrir(l) }} className="lien-action">{t('crud.modifier')}</button>}
+                    {ecriture && suppression && <button type="button" onClick={(e) => { e.stopPropagation(); supprimer(l) }} className="lien-action text-red-600">{t('crud.supprimer')}</button>}
                   </td>
                 )}
               </tr>
@@ -255,10 +286,10 @@ export default function TableauCrud({ config }) {
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-xs text-ardoise">{lignes.length} élément(s). Double-cliquez sur une ligne pour la modifier.</p>
+      <p className="mt-2 text-xs text-ardoise">{t('crud.compte', { n: lignes.length })}{ecriture && ` ${t('crud.doubleClic')}`}</p>
 
       {/* Formulaire de création / modification */}
-      <Modale titre={formulaire?.id == null ? `Ajouter — ${titre}` : `Modifier — ${titre}`} ouverte={Boolean(formulaire)} onFermer={() => setFormulaire(null)} large={champs.length > 8}>
+      <Modale titre={formulaire?.id == null ? t('crud.titreAjout', { titre }) : t('crud.titreModif', { titre })} ouverte={Boolean(formulaire)} onFermer={() => setFormulaire(null)} large={champs.length > 8}>
         {formulaire && (
           <form onSubmit={enregistrer} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {champs.filter((c) => !c.visible || c.visible(formulaire.valeurs)).map((c) => (
@@ -272,8 +303,30 @@ export default function TableauCrud({ config }) {
               />
             ))}
             <div className="flex justify-end gap-2 sm:col-span-2">
-              <button type="button" onClick={() => setFormulaire(null)} className="btn-secondaire">Annuler</button>
-              <button type="submit" disabled={envoi} className="btn-principal">Enregistrer</button>
+              <button type="button" onClick={() => setFormulaire(null)} className="btn-secondaire">{t('commun.annuler')}</button>
+              <button type="submit" disabled={envoi} className="btn-principal">{t('commun.enregistrer')}</button>
+            </div>
+          </form>
+        )}
+      </Modale>
+
+      {/* Modale d'une action avec saisie (ex. mouvement de stock) */}
+      <Modale titre={saisieAction ? saisieAction.action.formulaire.titre(saisieAction.ligne) : ''} ouverte={Boolean(saisieAction)} onFermer={() => setSaisieAction(null)}>
+        {saisieAction && (
+          <form onSubmit={validerAction} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {saisieAction.action.formulaire.champs.map((c) => (
+              <Champ
+                key={c.cle}
+                champ={c}
+                valeur={lire(saisieAction.valeurs, c.cle)}
+                listesRef={listesRef}
+                refs={refs}
+                onChange={(v) => setSaisieAction((sa) => ({ ...sa, valeurs: ecrire(sa.valeurs, c.cle, v) }))}
+              />
+            ))}
+            <div className="flex justify-end gap-2 sm:col-span-2">
+              <button type="button" onClick={() => setSaisieAction(null)} className="btn-secondaire">{t('commun.annuler')}</button>
+              <button type="submit" className="btn-principal">{t('commun.enregistrer')}</button>
             </div>
           </form>
         )}
@@ -283,9 +336,9 @@ export default function TableauCrud({ config }) {
 }
 
 // --- Affichage par défaut d'une valeur dans une cellule
-function affichageSimple(v) {
+function affichageSimple(v, t) {
   if (v == null || v === '') return '—'
-  if (typeof v === 'boolean') return v ? 'Oui' : 'Non'
+  if (typeof v === 'boolean') return v ? t('commun.oui') : t('commun.non')
   if (Array.isArray(v)) return v.join(', ') || '—'
   if (typeof v === 'object') return JSON.stringify(v)
   return String(v)
@@ -293,7 +346,8 @@ function affichageSimple(v) {
 
 // --- Un champ du formulaire, selon son type
 function Champ({ champ, valeur, onChange, listesRef, refs }) {
-  const { cle, libelle, type = 'texte', options = [], requis, aide, large } = champ
+  const { t } = useLangue()
+  const { cle, libelle, type = 'texte', options = [], requis, aide, large, min, max, pas } = champ
   const id = `champ-${cle}`
   const classeBloc = large || type === 'lignes' || type === 'zone' ? 'sm:col-span-2' : ''
 
@@ -323,10 +377,10 @@ function Champ({ champ, valeur, onChange, listesRef, refs }) {
                   <Champ champ={sc} valeur={l[sc.cle]} onChange={(v) => maj(i, sc.cle, v)} listesRef={listesRef} refs={refs} />
                 </div>
               ))}
-              <button type="button" onClick={() => onChange(liste.filter((_, j) => j !== i))} className="mb-1 px-2 text-red-600" aria-label="Retirer la ligne">×</button>
+              <button type="button" onClick={() => onChange(liste.filter((_, j) => j !== i))} className="mb-1 px-2 text-red-600" aria-label={t('crud.retirerLigne')}>×</button>
             </div>
           ))}
-          <button type="button" onClick={() => onChange([...liste, { ...vide }])} className="btn-secondaire text-sm">+ Ajouter une ligne</button>
+          <button type="button" onClick={() => onChange([...liste, { ...vide }])} className="btn-secondaire text-sm">{t('crud.ajouterLigne')}</button>
         </div>
       </fieldset>
     )
@@ -345,13 +399,13 @@ function Champ({ champ, valeur, onChange, listesRef, refs }) {
       </select>
     )
   } else if (type === 'motdepasse') {
-    controle = <MotDePasse id={id} value={valeur ?? ''} onChange={(e) => onChange(e.target.value)} autoComplete="new-password" placeholder="Laisser vide pour ne pas changer" />
+    controle = <MotDePasse id={id} value={valeur ?? ''} onChange={(e) => onChange(e.target.value)} autoComplete="new-password" placeholder={t('crud.mdpInchange')} />
   } else if (type === 'zone') {
     controle = <textarea id={id} value={valeur ?? ''} onChange={(e) => onChange(e.target.value)} required={requis} rows={3} className="champ" />
   } else {
     const typeHtml = { nombre: 'number', date: 'date', dateheure: 'datetime-local' }[type] || 'text'
     controle = (
-      <input id={id} type={typeHtml} step={type === 'nombre' ? 'any' : undefined} value={valeur ?? ''} onChange={(e) => onChange(e.target.value)} required={requis} className="champ" />
+      <input id={id} type={typeHtml} step={type === 'nombre' ? (pas ?? 'any') : undefined} min={min} max={max} value={valeur ?? ''} onChange={(e) => onChange(e.target.value)} required={requis} className="champ" />
     )
   }
   return (

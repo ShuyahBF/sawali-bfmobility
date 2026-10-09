@@ -15,6 +15,7 @@ import { useToasts } from './Toasts.jsx'
 import RechercheAdresse from './RechercheAdresse.jsx'
 import BadgeEnergie from './BadgeEnergie.jsx'
 import Co2 from './Co2.jsx'
+import BadgeDistance from './BadgeDistance.jsx'
 
 export default function Simulateur() {
   const { categories, monnaie, distance } = useConfig()
@@ -107,6 +108,8 @@ export default function Simulateur() {
             <div className="mt-2 flex flex-wrap gap-2">
               {estimation.majoration_nuit && <span className="rounded-full bg-nuit px-2.5 py-1 text-xs font-bold text-ambre-500">☾ {t('simu.nuit')}</span>}
               {cat?.energies?.includes('electrique') && <Co2 km={estimation.distance_km} />}
+              {/* Distance calculée par la route ou estimée (lot 2) */}
+              <BadgeDistance source={estimation.source_distance} />
             </div>
           </>
         ) : (

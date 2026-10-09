@@ -46,7 +46,8 @@ export function EnTete({ sombre = false }) {
           <span className="hidden sm:inline-flex"><SelecteurLangue clair={sombre} /></span>
           {utilisateur ? (
             <>
-              <span className={`hidden text-sm sm:inline ${sombre ? 'text-white/70' : 'text-ardoise'}`}>{utilisateur.nom}</span>
+              {/* Nom de l'utilisateur = lien vers son profil */}
+              <Link to="/profil" className={`hidden text-sm font-bold hover:underline sm:inline ${sombre ? 'text-white/80' : 'text-nuit'}`} title={t('nav.profil')}>{utilisateur.nom}</Link>
               <button type="button" onClick={() => { deconnexion(); naviguer('/') }} className={sombre ? 'rounded-xl px-3 py-2 text-sm font-bold text-white ring-1 ring-white/25 hover:bg-white/10' : 'btn-secondaire py-2 text-sm'}>
                 {t('nav.deconnexion')}
               </button>
@@ -98,6 +99,10 @@ export function PiedDePage() {
           {/* Version et date de déploiement (règle du propriétaire) */}
           <Version className="!text-white/50" />
         </div>
+        {/* Limite de la protection anti-capture (règle de sécurité de l'interface) */}
+        <div className="mx-auto max-w-6xl px-4 pb-4 text-xs text-white/40">
+          {t('secu.note')}
+        </div>
       </div>
     </footer>
   )
@@ -118,6 +123,10 @@ export function BarreOnglets() {
       <NavLink to="/commander" className={onglet}>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" /></svg>
         {t('nav.commander')}
+      </NavLink>
+      <NavLink to="/profil" className={onglet}>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><circle cx="12" cy="8" r="4" /><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6" /></svg>
+        {t('nav.profil')}
       </NavLink>
       <NavLink to="/courses" className={onglet}>
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10" /></svg>

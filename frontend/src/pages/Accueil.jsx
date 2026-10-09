@@ -85,7 +85,7 @@ const ICONES = {
 
 export default function Accueil() {
   const { t } = useLangue()
-  const { categories, config } = useConfig()
+  const { categories } = useConfig()
   const avantages = [
     ['prix', 'av1'], ['carte', 'av2'], ['feuille', 'av3'], ['paiement', 'av4'],
   ]
@@ -158,12 +158,7 @@ export default function Accueil() {
             <h2 className="text-3xl font-bold text-nuit sm:text-4xl">{t('accueil.chauffeurTitre')}</h2>
             <p className="mt-2 max-w-prose text-nuit/80">{t('accueil.chauffeurTexte')}</p>
           </div>
-          <a
-            href={config.email_support ? `mailto:${config.email_support}?subject=${encodeURIComponent('Candidature chauffeur')}` : '/inscription'}
-            className="btn-nuit px-6 py-3"
-          >
-            {t('accueil.chauffeurCta')}
-          </a>
+          <Link to="/devenir-chauffeur" className="btn-nuit px-6 py-3">{t('accueil.chauffeurCta')}</Link>
         </div>
       </section>
     </PageSite>

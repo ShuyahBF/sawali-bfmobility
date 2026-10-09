@@ -1,6 +1,7 @@
 // ============================================================================
 // Routes (adresses) du site
-//   Public   : /  /connexion  /inscription  /commander
+//   Public   : /  /connexion  /inscription  /commander  /devenir-chauffeur
+//   Compte   : /profil (tout utilisateur connecté)
 //   Client   : /courses  /courses/:id  /recu/:id
 //   Chauffeur: /chauffeur
 //   Back-office (admin, gestionnaire, mécanicien) : /admin/...
@@ -14,13 +15,17 @@ import { useAuth } from '@/contexte/Auth.jsx'
 import Accueil from '@/pages/Accueil.jsx'
 import Connexion from '@/pages/Connexion.jsx'
 import Inscription from '@/pages/Inscription.jsx'
-import Commander from '@/pages/Commander.jsx'
-import MesCourses from '@/pages/MesCourses.jsx'
-import SuiviCourse from '@/pages/SuiviCourse.jsx'
-import Recu from '@/pages/Recu.jsx'
 import NonTrouve from '@/pages/NonTrouve.jsx'
+import ProtectionEcran from '@/composants/ProtectionEcran.jsx'
 
-// Chargement à la demande
+// Chargement à la demande : les pages avec carte (Leaflet) et les espaces
+// connectés ne sont téléchargés qu'à la première visite (accueil plus rapide)
+const Commander = lazy(() => import('@/pages/Commander.jsx'))
+const MesCourses = lazy(() => import('@/pages/MesCourses.jsx'))
+const SuiviCourse = lazy(() => import('@/pages/SuiviCourse.jsx'))
+const Recu = lazy(() => import('@/pages/Recu.jsx'))
+const DevenirChauffeur = lazy(() => import('@/pages/DevenirChauffeur.jsx'))
+const Profil = lazy(() => import('@/pages/Profil.jsx'))
 const Chauffeur = lazy(() => import('@/pages/Chauffeur.jsx'))
 const AdminLayout = lazy(() => import('@/pages/admin/AdminLayout.jsx'))
 const TableauDeBord = lazy(() => import('@/pages/admin/TableauDeBord.jsx'))
@@ -46,6 +51,7 @@ const RESSOURCES = [
   ['fournisseurs', DIRECTION],
   ['commandes', DIRECTION],
   ['paiements-fournisseurs', DIRECTION],
+  ['candidatures', DIRECTION],
 ]
 
 // Accueil du back-office : le mécanicien arrive sur ses interventions
@@ -61,12 +67,16 @@ const attente = <div className="grid min-h-screen place-items-center"><Jauge tai
 export default function App() {
   return (
     <Suspense fallback={attente}>
+      {/* Protection de l'écran : une seule fois pour tout le site */}
+      <ProtectionEcran />
       <Routes>
         {/* Public */}
         <Route path="/" element={<Accueil />} />
         <Route path="/connexion" element={<Connexion />} />
         <Route path="/inscription" element={<Inscription />} />
         <Route path="/commander" element={<Commander />} />
+        <Route path="/devenir-chauffeur" element={<DevenirChauffeur />} />
+        <Route path="/profil" element={<RouteProtegee><Profil /></RouteProtegee>} />
 
         {/* Client (et suivi accessible au chauffeur / à la direction) */}
         <Route path="/courses" element={<RouteProtegee roles={['client']}><MesCourses /></RouteProtegee>} />

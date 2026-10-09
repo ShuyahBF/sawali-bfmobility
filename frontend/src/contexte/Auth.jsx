@@ -60,6 +60,16 @@ export function AuthProvider({ children }) {
     return data.utilisateur
   }, [])
 
+  // Lot 2 — connexion par code reçu sur WhatsApp (ou SMS) ; `nom` exigé pour un nouveau compte
+  const connexionParCode = useCallback(async (telephone, code, nom) => {
+    const corps = { telephone, code }
+    if (nom) corps.nom = nom
+    const { data } = await api.post('/auth/otp/verification', corps)
+    ecrireJeton(data.jeton)
+    setUtilisateur(data.utilisateur)
+    return data.utilisateur
+  }, [])
+
   // Déconnexion volontaire
   const deconnexion = useCallback(() => {
     ecrireJeton(null)
@@ -67,8 +77,8 @@ export function AuthProvider({ children }) {
   }, [])
 
   const valeur = useMemo(
-    () => ({ utilisateur, setUtilisateur, pret, connexion, inscription, deconnexion }),
-    [utilisateur, pret, connexion, inscription, deconnexion],
+    () => ({ utilisateur, setUtilisateur, pret, connexion, connexionParCode, inscription, deconnexion }),
+    [utilisateur, pret, connexion, connexionParCode, inscription, deconnexion],
   )
   return <ContexteAuth.Provider value={valeur}>{children}</ContexteAuth.Provider>
 }

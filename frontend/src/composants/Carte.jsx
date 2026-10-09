@@ -2,6 +2,8 @@
 // Carte interactive (Leaflet + tuiles OpenStreetMap, gratuites et mondiales)
 //   depart / arrivee : {lat, lng}  → marqueurs vert (A) et ambre (B)
 //   chauffeur        : {lat, lng}  → voiture qui pulse
+//   trace            : [[lat, lng], …] itinéraire routier (lot 2) → trait plein ;
+//                      sans trace, simple ligne pointillée départ → arrivée
 //   onClic(point)    : appelé quand on touche la carte (choix d'un point)
 //   centre           : centre par défaut quand aucun point n'est placé
 // La vue s'ajuste automatiquement pour montrer tous les points.
@@ -64,12 +66,19 @@ function Ajustement({ points }) {
 // Vrai si l'objet contient des coordonnées valides
 const valide = (p) => p && Number.isFinite(Number(p.lat)) && Number.isFinite(Number(p.lng))
 
-export default function Carte({ depart, arrivee, chauffeur, onClic, centre, hauteur = 'h-80', className = '' }) {
-  // Liste des points à montrer (pour l'ajustement de la vue)
-  const points = useMemo(
-    () => [depart, arrivee, chauffeur].filter(valide).map((p) => ({ lat: Number(p.lat), lng: Number(p.lng) })),
-    [depart, arrivee, chauffeur],
+export default function Carte({ depart, arrivee, chauffeur, trace, onClic, centre, hauteur = 'h-80', className = '' }) {
+  // Itinéraire routier exploitable (au moins deux points valides)
+  const itineraire = useMemo(
+    () => (Array.isArray(trace) ? trace.filter((p) => Array.isArray(p) && Number.isFinite(Number(p[0])) && Number.isFinite(Number(p[1]))) : []),
+    [trace],
   )
+  // Liste des points à montrer (pour l'ajustement de la vue) : marqueurs + quelques points de l'itinéraire
+  const points = useMemo(() => {
+    const marqueurs = [depart, arrivee, chauffeur].filter(valide).map((p) => ({ lat: Number(p.lat), lng: Number(p.lng) }))
+    const pas = Math.max(1, Math.floor(itineraire.length / 20))
+    const route = itineraire.filter((_, i) => i % pas === 0).map(([lat, lng]) => ({ lat: Number(lat), lng: Number(lng) }))
+    return [...marqueurs, ...route]
+  }, [depart, arrivee, chauffeur, itineraire])
   const c = valide(centre) ? centre : points[0] || CENTRE_DEFAUT
 
   return (
@@ -82,8 +91,15 @@ export default function Carte({ depart, arrivee, chauffeur, onClic, centre, haut
         />
         {onClic && <EcouteClic onClic={onClic} />}
         <Ajustement points={points} />
-        {/* Ligne pointillée départ → arrivée (indicative, à vol d'oiseau) */}
-        {valide(depart) && valide(arrivee) && (
+        {/* Itinéraire routier : trait plein vert bordé de bleu nuit (lisible sur tous les fonds) */}
+        {itineraire.length > 1 && (
+          <>
+            <Polyline positions={itineraire} pathOptions={{ color: '#0B1F3A', weight: 8, opacity: 0.85, lineCap: 'round', lineJoin: 'round' }} />
+            <Polyline positions={itineraire} pathOptions={{ color: '#2EE59D', weight: 4.5, lineCap: 'round', lineJoin: 'round' }} />
+          </>
+        )}
+        {/* Sans itinéraire : ligne pointillée départ → arrivée (indicative, à vol d'oiseau) */}
+        {itineraire.length < 2 && valide(depart) && valide(arrivee) && (
           <Polyline positions={[[depart.lat, depart.lng], [arrivee.lat, arrivee.lng]]} pathOptions={{ color: '#0B1F3A', weight: 4, dashArray: '2 10', lineCap: 'round' }} />
         )}
         {valide(depart) && <Marker position={[depart.lat, depart.lng]} icon={ICONE_DEPART} />}

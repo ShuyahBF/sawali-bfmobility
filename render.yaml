@@ -11,6 +11,9 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/health
+    # Domaine du serveur (sous-domaine de sawalismartsystems.com, DNS chez Cloudflare : CNAME → bfmobility-backend.onrender.com)
+    domains:
+      - api-bfmobility.sawalismartsystems.com
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.10
@@ -24,9 +27,11 @@ services:
       # --- Jeton de connexion ---
       - key: JWT_SECRET
         generateValue: true
-      # --- Site autorisé (CORS) : adresse officielle en premier ---
+      # --- Sites autorisés (CORS) : la PREMIÈRE adresse sert aux liens (retours de paiement, messages) ---
+      # Étape 1 (09/10/2026) : domaine bfmobility.sawalismartsystems.com AUTORISÉ, adresse Render encore en premier ;
+      # étape 2, une fois le DNS Cloudflare vérifié : le domaine officiel passe en premier.
       - key: FRONTEND_ORIGIN
-        value: https://bfmobility-frontend.onrender.com
+        value: https://bfmobility-frontend.onrender.com,https://bfmobility.sawalismartsystems.com
       # --- Premier administrateur (créé au premier démarrage) ---
       - key: ADMIN_EMAIL
         sync: false
@@ -80,11 +85,15 @@ services:
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
+    # Domaine du site (sous-domaine de sawalismartsystems.com, DNS chez Cloudflare : CNAME → bfmobility-frontend.onrender.com)
+    domains:
+      - bfmobility.sawalismartsystems.com
     # Application monopage : toutes les adresses renvoient index.html
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
     envVars:
+      # Serveur appelé par le site. Étape 2 (après vérification du DNS) : https://api-bfmobility.sawalismartsystems.com
       - key: VITE_API_URL
         value: https://bfmobility-backend.onrender.com

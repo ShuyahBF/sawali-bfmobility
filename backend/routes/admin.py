@@ -14,7 +14,7 @@ from typing import Any, Callable, Dict, List, Optional
 from fastapi import APIRouter, Body, Depends, HTTPException, Request
 
 from db import db
-from metier import (ENERGIES, PAYS, alerte_stock, alertes_document, etat_plan, iso, lire_date, maintenant,
+from metier import (ENERGIES, MODES_PAIEMENT_TVM, PAYS, alerte_stock, alertes_document, etat_plan, iso, lire_date, maintenant,
                     numero_document)
 from outils import nouvel_id, parametres, prochain_numero
 from routes.auth import indicatif_pays
@@ -37,6 +37,11 @@ RESSOURCES: Dict[str, Dict[str, Any]] = {
             "capacite_batterie_kwh": ("float", False), "reservoir_l": ("float", False), "kilometrage": ("float", False),
             "statut": ("enum:disponible|en_service|maintenance|hors_service", False), "chauffeur_id": ("str", False),
             "assurance_expire": ("date", False), "controle_technique_expire": ("date", False), "photo_url": ("str", False),
+            # Lot 11 : taxe sur les véhicules à moteur (TVM), document délivré par les impôts
+            "tvm_expire": ("date", False), "tvm_paye_le": ("date", False), "tvm_reference": ("str", False),
+            "tvm_montant": ("float", False), "tvm_mode_paiement": ("enum:" + "|".join(MODES_PAIEMENT_TVM), False),
+            # Lot 11 : assureur et n° de police (l'assurance n'avait que sa date d'échéance)
+            "assurance_compagnie": ("str", False), "assurance_police": ("str", False),
         },
         "defauts": {"statut": "disponible", "kilometrage": 0, "places": 4, "confort": []},
         "unique": ["immatriculation"],
@@ -553,4 +558,7 @@ async def supprimer(nom: str, doc_id: str, u: dict = Depends(exiger(*ATELIER))):
         # Lot 9 : les photos du véhicule supprimé ne restent pas dans la base
         from routes.photos_vehicules import supprimer_photos_du_vehicule
         await supprimer_photos_du_vehicule(doc_id)
+        # Lot 11 : de même pour les scans de ses documents (assurance, visite technique, TVM)
+        from routes.documents_vehicules import supprimer_documents_du_vehicule
+        await supprimer_documents_du_vehicule(doc_id)
     return {"ok": True}

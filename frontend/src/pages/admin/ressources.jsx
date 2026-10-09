@@ -7,6 +7,7 @@
 // ============================================================================
 import BadgeEnergie from '@/composants/BadgeEnergie.jsx'
 import PhotosVehicule from '@/composants/PhotosVehicule.jsx'   // lot 9 : 4 photos par véhicule
+import DocumentsVehicule from '@/composants/DocumentsVehicule.jsx'   // lot 11 : scans assurance, visite technique, TVM
 import TableauCrud from '@/composants/TableauCrud.jsx'             // lot 10 : listes liées dans les onglets des fiches
 import CoursesDeLaFiche from '@/composants/CoursesDeLaFiche.jsx'   // lot 10 : onglet « Courses »
 import Totaux from '@/composants/Totaux.jsx'                       // lot 10 : bandeaux de totaux
@@ -22,6 +23,8 @@ const VALEURS = {
   statutsIntervention: ['planifiee', 'en_cours', 'terminee'],
   statutsCommande: ['brouillon', 'envoyee', 'recue', 'annulee'],
   moyens: ['virement', 'especes', 'mobile_money', 'cheque', 'carte'],
+  // Lot 11 : modes de paiement de la TVM (mêmes valeurs que metier.MODES_PAIEMENT_TVM côté serveur)
+  modesTvm: ['especes', 'mobile_money', 'virement', 'cheque', 'carte'],
   statutsCandidature: ['nouvelle', 'contactee', 'acceptee', 'refusee'],
 }
 // Icônes devant les énergies dans les menus
@@ -97,10 +100,14 @@ export function configRessource(nom, contexte = {}) {
         filtres: [{ cle: 'statut', libelle: c('statut'), options: opts('statutsVehicule') }],
         defaut: { statut: 'disponible', energie: 'electrique', places: 4, kilometrage: 0, confort: [] },
         // Lot 10 — fiche claire : sections + onglets de la « vie » du véhicule
-        sections: [section('identite', '🚗'), section('technique', '⚙️'), section('exploitation', '🧭'), section('documents', '📄')],
+        sections: [section('identite', '🚗'), section('technique', '⚙️'), section('exploitation', '🧭'),
+                   // Lot 11 : un cadre par document officiel (assurance, visite technique, TVM)
+                   section('assurance', '🛡️'), section('visite', '🔍'), section('tvm', '🧾')],
         titreFiche: (l) => `${l.marque || ''} ${l.modele || ''} — ${l.immatriculation || ''}`,
         onglets: [
           { cle: 'photos', icone: '📷', libelle: t('adm.onglet.photos'), rendu: (l) => <PhotosVehicule vehicule={l} peutModifier={direction} /> },
+          // Lot 11 : scans des documents officiels (PDF ou photo), réservés au personnel
+          { cle: 'scans', icone: '📄', libelle: t('adm.onglet.scans'), rendu: (l) => <DocumentsVehicule vehicule={l} peutModifier={direction} /> },
           ongletListe('energie', '⛽', 'energie', (l) => ({ vehicule_id: l.id })),
           ongletListe('interventions', '🔧', 'interventions', (l) => ({ vehicule_id: l.id })),
           ongletListe('plans', '🗓️', 'plans', (l) => ({ vehicule_id: l.id })),
@@ -128,6 +135,7 @@ export function configRessource(nom, contexte = {}) {
           { cle: 'chauffeur_id', libelle: c('chauffeur'), rendu: (l, a) => a.ref('utilisateurs', l.chauffeur_id) },
           { cle: 'assurance_expire', libelle: c('assurance'), rendu: (l) => <Echeance iso={l.assurance_expire} langue={langue} /> },
           { cle: 'controle_technique_expire', libelle: c('controleTech'), rendu: (l) => <Echeance iso={l.controle_technique_expire} langue={langue} /> },
+          { cle: 'tvm_expire', libelle: c('tvm'), rendu: (l) => <Echeance iso={l.tvm_expire} langue={langue} /> },
         ],
         champs: [
           { cle: 'immatriculation', section: 'identite', libelle: c('immatriculation'), requis: true },
@@ -145,8 +153,18 @@ export function configRessource(nom, contexte = {}) {
           { cle: 'kilometrage', section: 'technique', libelle: c('kilometrage'), type: 'nombre' },
           { cle: 'statut', section: 'exploitation', libelle: c('statut'), type: 'select', options: opts('statutsVehicule') },
           { cle: 'chauffeur_id', section: 'exploitation', libelle: c('chauffeurAttitre'), type: 'ref', ref: 'utilisateurs' },
-          { cle: 'assurance_expire', section: 'documents', libelle: c('assuranceJusquau'), type: 'date' },
-          { cle: 'controle_technique_expire', section: 'documents', libelle: c('controleJusquau'), type: 'date' },
+          // Lot 11 : assurance (compagnie, n° de police, échéance)
+          { cle: 'assurance_compagnie', section: 'assurance', libelle: c('assuranceCompagnie') },
+          { cle: 'assurance_police', section: 'assurance', libelle: c('assurancePolice') },
+          { cle: 'assurance_expire', section: 'assurance', libelle: c('assuranceJusquau'), type: 'date' },
+          // Visite technique
+          { cle: 'controle_technique_expire', section: 'visite', libelle: c('controleJusquau'), type: 'date' },
+          // TVM : document délivré par les impôts — référence de la transaction, montant, mode de paiement, dates
+          { cle: 'tvm_reference', section: 'tvm', libelle: c('tvmReference'), aide: t('adm.aide.tvmReference') },
+          { cle: 'tvm_montant', section: 'tvm', libelle: c('tvmMontant'), type: 'nombre' },
+          { cle: 'tvm_mode_paiement', section: 'tvm', libelle: c('tvmMode'), type: 'select', options: opts('modesTvm') },
+          { cle: 'tvm_paye_le', section: 'tvm', libelle: c('tvmPayeLe'), type: 'date' },
+          { cle: 'tvm_expire', section: 'tvm', libelle: c('tvmJusquau'), type: 'date' },
         ],
       }
 

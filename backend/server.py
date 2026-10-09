@@ -11,7 +11,7 @@ import support_sawali   # SAWALI lot 90 : pictogramme d'assistance → support S
 import version_plateforme
 from config import get_settings
 from db import creer_index
-from routes import admin, auth, chauffeur, courses, paiements, photos_vehicules, public   # lot 9 : photos des véhicules
+from routes import admin, auth, chauffeur, courses, documents_vehicules, paiements, photos_vehicules, public   # lot 9 : photos ; lot 11 : scans
 from seed import initialiser
 
 reglages = get_settings()
@@ -43,6 +43,7 @@ api.include_router(courses.router)
 api.include_router(chauffeur.router)
 api.include_router(paiements.router)   # lot 2 : paiement en ligne (avant admin : routes plus précises)
 api.include_router(photos_vehicules.router)   # lot 9 : 4 photos par véhicule (avant admin : routes plus précises)
+api.include_router(documents_vehicules.router)   # lot 11 : scans assurance, visite technique, TVM
 api.include_router(admin.router)
 # SAWALI lot 90 — support SAWALI (personnel du back-office) : identité envoyée à SAWALI pour le fil de discussion
 from securite import utilisateur_courant  # noqa: E402

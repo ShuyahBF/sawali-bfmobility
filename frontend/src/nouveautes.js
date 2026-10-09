@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 7,
+    date: '09/10/2026',
+    titre: 'Assistance pour les clients et les chauffeurs',
+    description: 'Le pictogramme d\'assistance (support SAWALI) apparaît aussi dans l\'en-tête pour tout utilisateur connecté : client, chauffeur, personnel.',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 6,
     date: '09/10/2026',
     titre: 'Assistance : discussion avec le support SAWALI',

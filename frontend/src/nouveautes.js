@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 14,
+    date: '09/10/2026',
+    titre: 'Version courte dans la barre latérale',
+    description: 'La barre latérale du back-office n\'affiche plus que la version et la date de déploiement ; le lot et le commit restent sur la page Paramètres.',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 13,
     date: '09/10/2026',
     titre: 'Pictogrammes dans la fenêtre d\'assistance',

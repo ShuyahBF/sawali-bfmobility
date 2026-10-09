@@ -85,7 +85,9 @@ export default function AdminLayout() {
         {/* SAWALI lot 90 — petit pictogramme d'assistance : discussion avec le support SAWALI */}
         <div className="mt-2 -mx-3"><SupportSawali api={api} clair /></div>
         <div className="mt-2"><SelecteurLangue clair /></div>
-        <Version detaille className="mt-3 !text-white/45" />
+        {/* Lot 14 — règle du propriétaire : barre latérale = libellé court (version + date), sans lot ni commit ;
+            le libellé détaillé reste réservé à la page Paramètres */}
+        <Version className="mt-3 !text-white/45" />
       </div>
     </div>
   )

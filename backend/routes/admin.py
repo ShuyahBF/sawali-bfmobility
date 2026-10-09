@@ -535,4 +535,8 @@ async def supprimer(nom: str, doc_id: str, u: dict = Depends(exiger(*ATELIER))):
     res = await db[r["collection"]].delete_one({"id": doc_id})
     if res.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Élément introuvable")
+    if nom == "vehicules":
+        # Lot 9 : les photos du véhicule supprimé ne restent pas dans la base
+        from routes.photos_vehicules import supprimer_photos_du_vehicule
+        await supprimer_photos_du_vehicule(doc_id)
     return {"ok": True}

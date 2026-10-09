@@ -2,11 +2,13 @@
 // Page d'accueil (vitrine) : héros + simulateur de prix, catégories et tarifs,
 // location avec chauffeur, avantages, « Devenez chauffeur ».
 // ============================================================================
+import { useState } from 'react'   // lot 9 : ouverture de la galerie
 import { Link } from 'react-router-dom'
 import PageSite from '@/composants/MiseEnPage.jsx'
 import Simulateur from '@/composants/Simulateur.jsx'
 import BadgeEnergie from '@/composants/BadgeEnergie.jsx'
 import { useConfig } from '@/contexte/Config.jsx'
+import GalerieVehicules from '@/composants/GalerieVehicules.jsx'   // lot 9 : photos des véhicules
 import { useLangue } from '@/i18n/index.jsx'
 
 // Fond du héros : plan de ville stylisé (rues de Ouaga vues d'en haut) + trajet A → B tracé une seule fois
@@ -54,6 +56,7 @@ function PlanVille() {
 function LigneCategorie({ cat }) {
   const { t } = useLangue()
   const { monnaie } = useConfig()
+  const [galerie, setGalerie] = useState(false)   // lot 9 : photos des véhicules de la catégorie
   return (
     <li className="group grid gap-4 py-6 md:grid-cols-[1.3fr_1fr_1.2fr_auto] md:items-center md:gap-8">
       <div>
@@ -82,9 +85,14 @@ function LigneCategorie({ cat }) {
           {cat.vehicules_disponibles ? t('accueil.dispo', { n: cat.vehicules_disponibles }) : t('accueil.aucunDispo')}
         </dd>
       </dl>
-      <Link to="/commander" state={{ categorie: cat.code }} className="btn-secondaire justify-self-start md:justify-self-end">
-        {t('accueil.cta')}
-      </Link>
+      <div className="flex flex-wrap gap-2 justify-self-start md:flex-col md:items-end md:justify-self-end">
+        <Link to="/commander" state={{ categorie: cat.code }} className="btn-secondaire">
+          {t('accueil.cta')}
+        </Link>
+        {/* Lot 9 — photos des véhicules (zoom), puis retour au choix */}
+        <button type="button" onClick={() => setGalerie(true)} className="lien-action text-sm">📷 {t('photos.voir')}</button>
+      </div>
+      <GalerieVehicules categorie={cat} ouverte={galerie} onFermer={() => setGalerie(false)} />
     </li>
   )
 }

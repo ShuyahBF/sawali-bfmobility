@@ -10,6 +10,8 @@ import Version from '@/composants/Version.jsx'
 import SelecteurLangue from '@/composants/SelecteurLangue.jsx'
 import { useLangue } from '@/i18n/index.jsx'
 import { useAuth } from '@/contexte/Auth.jsx'
+import SupportSawali from '@/composants/SupportSawali.jsx'   // SAWALI lot 90 : pictogramme d'assistance
+import api from '@/lib/api.js'
 
 // Menu complet ; « roles » = rôles qui voient l'entrée ;
 // groupe et libelle sont des clés de traduction (adm.menu.<clé>)
@@ -80,6 +82,8 @@ export default function AdminLayout() {
           <Link to="/profil" className="text-sm font-bold text-white/80 hover:underline">{t('nav.profil')}</Link>
           <button type="button" onClick={() => { deconnexion(); naviguer('/connexion') }} className="text-sm font-bold text-volt-400 hover:underline">{t('nav.deconnexion')}</button>
         </div>
+        {/* SAWALI lot 90 — petit pictogramme d'assistance : discussion avec le support SAWALI */}
+        <div className="mt-2 -mx-3"><SupportSawali api={api} clair /></div>
         <div className="mt-2"><SelecteurLangue clair /></div>
         <Version detaille className="mt-3 !text-white/45" />
       </div>

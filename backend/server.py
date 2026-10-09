@@ -7,6 +7,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 import presence_sawali
+import support_sawali   # SAWALI lot 90 : pictogramme d'assistance → support SAWALI
 import version_plateforme
 from config import get_settings
 from db import creer_index
@@ -42,6 +43,11 @@ api.include_router(courses.router)
 api.include_router(chauffeur.router)
 api.include_router(paiements.router)   # lot 2 : paiement en ligne (avant admin : routes plus précises)
 api.include_router(admin.router)
+# SAWALI lot 90 — support SAWALI (personnel du back-office) : identité envoyée à SAWALI pour le fil de discussion
+from securite import utilisateur_courant  # noqa: E402
+api.include_router(support_sawali.creer_router(utilisateur_courant, lambda u: {
+    "id": str(u.get("id") or ""), "nom": u.get("nom") or "", "role": u.get("role") or "",
+    "contexte": "bfmobility", "email": u.get("email") or "", "telephone": u.get("telephone") or ""}))
 app.include_router(api)
 
 

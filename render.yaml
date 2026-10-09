@@ -1,0 +1,60 @@
+# Déploiement Render de sawali-bfmobility — serveur FastAPI + site statique (Vite/React).
+# Deux services reliés à ce dépôt GitHub : chaque push sur « main » les redéploie.
+# Variables « sync: false » : JAMAIS dans Git, saisies une fois par le propriétaire dans le tableau de bord Render.
+services:
+  - type: web
+    name: bfmobility-backend
+    runtime: python
+    plan: starter
+    autoDeploy: true
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.10
+      # --- MongoDB Atlas (collections préfixées bfm_) ---
+      - key: MONGO_URL
+        sync: false
+      - key: MONGO_DB_NAME
+        value: sawali_bfmobility
+      - key: MONGO_COLLECTION_PREFIX
+        value: bfm_
+      # --- Jeton de connexion ---
+      - key: JWT_SECRET
+        generateValue: true
+      # --- Site autorisé (CORS) : adresse officielle en premier ---
+      - key: FRONTEND_ORIGIN
+        value: https://bfmobility-frontend.onrender.com
+      # --- Premier administrateur (créé au premier démarrage) ---
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_MOT_DE_PASSE
+        sync: false
+      - key: ADMIN_TELEPHONE
+        sync: false
+      # --- Démonstration (catégories, véhicules, chauffeurs, pièces) : 1 = oui ---
+      - key: SEED_DEMO
+        value: "1"
+      - key: DEMO_MOT_DE_PASSE
+        sync: false
+      # --- Présence auprès de SAWALI (règle 4) ---
+      - key: LOOIS_SUPPORT_CLE
+        sync: false
+
+  - type: web
+    name: bfmobility-frontend
+    runtime: static
+    autoDeploy: true
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    # Application monopage : toutes les adresses renvoient index.html
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_API_URL
+        value: https://bfmobility-backend.onrender.com

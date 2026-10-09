@@ -1,0 +1,79 @@
+/* ==========================================================================
+   Styles globaux du site sawali-bfmobility
+   ========================================================================== */
+@import './tableaux.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* --- Base : fond, texte, focus clavier visible --- */
+@layer base {
+  html { -webkit-tap-highlight-color: transparent; }
+  body {
+    @apply bg-brume font-sans text-nuit antialiased;
+  }
+  h1, h2, h3 { @apply font-display; }
+  :focus-visible { @apply outline-none ring-2 ring-volt-500 ring-offset-2; }
+  /* Respect du réglage « réduire les animations » du système */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  }
+}
+
+/* --- Composants réutilisables (classes courtes utilisées partout) --- */
+@layer components {
+  /* Champ de saisie standard */
+  .champ {
+    @apply block w-full rounded-xl border-0 bg-white px-3 py-2.5 text-nuit ring-1 ring-nuit/15 placeholder:text-ardoise/60 focus:ring-2 focus:ring-volt-500;
+  }
+  /* Bouton principal : vert électrique, texte bleu nuit */
+  .btn-principal {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-volt-500 px-5 py-2.5 font-bold text-nuit transition hover:bg-volt-400 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  /* Bouton sombre (bleu nuit) */
+  .btn-nuit {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-nuit px-5 py-2.5 font-bold text-white transition hover:bg-nuit-700 active:translate-y-px disabled:opacity-50;
+  }
+  /* Bouton secondaire : contour discret */
+  .btn-secondaire {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 font-bold text-nuit ring-1 ring-nuit/15 transition hover:bg-brume disabled:opacity-50;
+  }
+  /* Petit lien d'action dans une ligne de tableau */
+  .lien-action {
+    @apply ml-3 text-sm font-bold text-nuit-600 underline-offset-2 hover:underline;
+  }
+  /* Surface blanche (bloc de contenu) */
+  .surface {
+    @apply rounded-3xl bg-white p-5 ring-1 ring-nuit/10;
+  }
+  /* Tableau du back-office */
+  .tableau { @apply w-full border-collapse text-sm; }
+  .tableau thead th { @apply whitespace-nowrap border-b border-nuit/10 bg-brume/60 px-4 py-3 text-left text-xs font-bold text-ardoise; }
+  .tableau tbody td { @apply border-b border-nuit/5 px-4 py-3 align-middle; }
+  .tableau tbody tr:last-child td { @apply border-b-0; }
+}
+
+/* --- Marqueurs de la carte (voir composants/Carte.jsx) --- */
+.bfm-epingle { background: none; border: 0; }
+.bfm-chauffeur { background: none; border: 0; position: relative; }
+.bfm-chauffeur .bfm-voiture {
+  position: absolute; inset: 2px; display: grid; place-items: center;
+  border-radius: 9999px; background: #0B1F3A; border: 2px solid #2EE59D;
+  box-shadow: 0 6px 16px rgba(11, 31, 58, 0.35);
+}
+.bfm-chauffeur .bfm-halo {
+  position: absolute; inset: 0; border-radius: 9999px; background: rgba(46, 229, 157, 0.45);
+  animation: pouls 1.8s ease-out infinite;
+}
+@keyframes pouls { 0% { transform: scale(.6); opacity: .8 } 100% { transform: scale(2.4); opacity: 0 } }
+/* La carte reste sous les menus et fenêtres du site */
+.leaflet-container { font-family: inherit; z-index: 0; }
+
+/* --- Impression (reçu) : on n'imprime que le contenu utile --- */
+@media print {
+  .no-print { display: none !important; }
+  body { background: #fff !important; }
+  .print-plein { box-shadow: none !important; border: 0 !important; margin: 0 !important; max-width: none !important; }
+  @page { margin: 14mm; }
+}

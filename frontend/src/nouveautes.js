@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 13,
+    date: '09/10/2026',
+    titre: 'Pictogrammes dans la fenêtre d\'assistance',
+    description: 'Comme dans le chat SAWALI : emojis, photo, trombone (documents, vidéos) et note vocale transcrite ; les photos et documents du support s\'affichent dans la discussion.',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 12,
     date: '09/10/2026',
     titre: 'Carte grise des véhicules',

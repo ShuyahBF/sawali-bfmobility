@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 12,
+    date: '09/10/2026',
+    titre: 'Carte grise des véhicules',
+    description: 'Fiche véhicule : cadre Carte grise (n°, titulaire, châssis, puissance fiscale, genre, carrosserie, dates) et scan de la carte grise dans l\'onglet « Documents scannés ».',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 11,
     date: '09/10/2026',
     titre: 'Visite technique, TVM et documents scannés',

@@ -54,13 +54,13 @@ def test_champs_tvm_et_scans(c):
 
     # Les 3 emplacements de scan, vides au départ
     docs = c.get(f"/api/admin/vehicules/{vid}/documents", headers=admin).json()["documents"]
-    assert [d["document"] for d in docs] == ["assurance", "visite_technique", "tvm"] and not any(d["present"] for d in docs)
+    assert [d["document"] for d in docs] == ["carte_grise", "assurance", "visite_technique", "tvm"] and not any(d["present"] for d in docs)
 
     # Un client ne peut ni envoyer ni lire ; document inconnu et format refusé
     c.post("/api/auth/inscription", json={"nom": "Client TVM", "telephone": "76300000", "mot_de_passe": "client123"})
     client_hdr = connexion(c, "76300000", "client123")
     assert c.put(f"/api/admin/vehicules/{vid}/documents/tvm", headers=client_hdr, json={"fichier": data_url(PDF, "application/pdf")}).status_code == 403
-    assert c.put(f"/api/admin/vehicules/{vid}/documents/carte_grise", headers=admin, json={"fichier": data_url(PDF, "application/pdf")}).status_code == 422
+    assert c.put(f"/api/admin/vehicules/{vid}/documents/permis", headers=admin, json={"fichier": data_url(PDF, "application/pdf")}).status_code == 422
     assert c.put(f"/api/admin/vehicules/{vid}/documents/tvm", headers=admin, json={"fichier": data_url(b"texte", "text/plain")}).status_code == 415
 
     # Scan PDF de la TVM : servi au personnel seulement, sans cache public
@@ -81,3 +81,19 @@ def test_champs_tvm_et_scans(c):
     # Suppression du scan
     assert c.delete(f"/api/admin/vehicules/{vid}/documents/tvm", headers=admin).status_code == 200
     assert c.get(f"/api/admin/vehicules/{vid}/documents/tvm/fichier", headers=admin).status_code == 404
+
+
+def test_carte_grise(c):
+    """Lot 12 — carte grise : informations sur la fiche et scan stocké."""
+    admin = connexion(c, "admin@test.bf", "admin-test-123")
+    vid = c.get("/api/admin/vehicules", headers=admin).json()[0]["id"]
+    r = c.patch(f"/api/admin/vehicules/{vid}", headers=admin, json={
+        "cg_numero": "BF-CG-778899", "cg_titulaire": "bfmobility SARL", "cg_date_delivrance": "2024-03-01",
+        "cg_premiere_circulation": "2023-11-20", "cg_chassis": "JTDBR32E720123456", "cg_puissance_fiscale": 7,
+        "cg_genre": "VP", "cg_carrosserie": "Berline"})
+    assert r.status_code == 200, r.text
+    lu = next(x for x in c.get("/api/admin/vehicules", headers=admin).json() if x["id"] == vid)
+    assert lu["cg_numero"] == "BF-CG-778899" and lu["cg_puissance_fiscale"] == 7 and lu["cg_chassis"] == "JTDBR32E720123456"
+    r = c.put(f"/api/admin/vehicules/{vid}/documents/carte_grise", headers=admin, json={"fichier": data_url(PDF, "application/pdf"), "nom": "cg.pdf"})
+    assert r.status_code == 200, r.text
+    assert c.get(f"/api/admin/vehicules/{vid}/documents/carte_grise/fichier", headers=admin).content == PDF

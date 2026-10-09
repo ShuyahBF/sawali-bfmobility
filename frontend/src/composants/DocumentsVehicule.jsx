@@ -1,6 +1,6 @@
 // ============================================================================
 // DocumentsVehicule (lot 11) — onglet « Documents scannés » de la fiche véhicule :
-// attestation d'assurance, visite technique et quittance de TVM (impôts).
+// carte grise (lot 12), attestation d'assurance, visite technique et quittance de TVM (impôts).
 // Chaque document : « Joindre le scan » / « Remplacer », « Voir », « Supprimer ».
 //   - une PHOTO est réduite dans le navigateur avant l'envoi (lib/reduireImage.js) ;
 //   - un PDF est envoyé tel quel (4 Mo au plus).
@@ -92,7 +92,7 @@ export default function DocumentsVehicule({ vehicule, peutModifier = true }) {
   return (
     <div>
       <p className="mb-4 text-sm text-ardoise">{t('scans.aide')}</p>
-      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {docs.map((d) => (
           <li key={d.document} className={`flex flex-col gap-2 rounded-2xl p-4 ring-1 ${apercu?.document === d.document ? 'bg-sky-50 ring-sky-300' : 'ring-nuit/10'}`}>
             <span className="font-bold text-nuit">{t(`scans.doc.${d.document}`)}</span>

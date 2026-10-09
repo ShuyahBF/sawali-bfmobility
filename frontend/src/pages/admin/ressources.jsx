@@ -102,7 +102,7 @@ export function configRessource(nom, contexte = {}) {
         // Lot 10 — fiche claire : sections + onglets de la « vie » du véhicule
         sections: [section('identite', '🚗'), section('technique', '⚙️'), section('exploitation', '🧭'),
                    // Lot 11 : un cadre par document officiel (assurance, visite technique, TVM)
-                   section('assurance', '🛡️'), section('visite', '🔍'), section('tvm', '🧾')],
+                   section('carteGrise', '🪪'), section('assurance', '🛡️'), section('visite', '🔍'), section('tvm', '🧾')],
         titreFiche: (l) => `${l.marque || ''} ${l.modele || ''} — ${l.immatriculation || ''}`,
         onglets: [
           { cle: 'photos', icone: '📷', libelle: t('adm.onglet.photos'), rendu: (l) => <PhotosVehicule vehicule={l} peutModifier={direction} /> },
@@ -153,6 +153,15 @@ export function configRessource(nom, contexte = {}) {
           { cle: 'kilometrage', section: 'technique', libelle: c('kilometrage'), type: 'nombre' },
           { cle: 'statut', section: 'exploitation', libelle: c('statut'), type: 'select', options: opts('statutsVehicule') },
           { cle: 'chauffeur_id', section: 'exploitation', libelle: c('chauffeurAttitre'), type: 'ref', ref: 'utilisateurs' },
+          // Lot 12 : carte grise (certificat d'immatriculation) — l'immatriculation reste dans « Identification »
+          { cle: 'cg_numero', section: 'carteGrise', libelle: c('cgNumero') },
+          { cle: 'cg_titulaire', section: 'carteGrise', libelle: c('cgTitulaire') },
+          { cle: 'cg_chassis', section: 'carteGrise', libelle: c('cgChassis'), aide: t('adm.aide.cgChassis') },
+          { cle: 'cg_puissance_fiscale', section: 'carteGrise', libelle: c('cgPuissance'), type: 'nombre' },
+          { cle: 'cg_genre', section: 'carteGrise', libelle: c('cgGenre'), aide: t('adm.aide.cgGenre') },
+          { cle: 'cg_carrosserie', section: 'carteGrise', libelle: c('cgCarrosserie') },
+          { cle: 'cg_premiere_circulation', section: 'carteGrise', libelle: c('cgPremiere'), type: 'date' },
+          { cle: 'cg_date_delivrance', section: 'carteGrise', libelle: c('cgDelivrance'), type: 'date' },
           // Lot 11 : assurance (compagnie, n° de police, échéance)
           { cle: 'assurance_compagnie', section: 'assurance', libelle: c('assuranceCompagnie') },
           { cle: 'assurance_police', section: 'assurance', libelle: c('assurancePolice') },

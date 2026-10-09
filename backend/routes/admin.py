@@ -11,7 +11,7 @@ import re
 from datetime import timedelta
 from typing import Any, Callable, Dict, List, Optional
 
-from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi import APIRouter, Body, Depends, HTTPException, Request
 
 from db import db
 from metier import (ENERGIES, PAYS, alerte_stock, alertes_document, etat_plan, iso, lire_date, maintenant,
@@ -377,11 +377,19 @@ async def maj_parametres(corps: Dict[str, Any] = Body(...), u: dict = Depends(ex
 
 
 @router.get("/courses")
-async def courses(statut: str = "", q: str = "", limite: int = 200, u: dict = Depends(exiger(*EQUIPE))):
-    """Toutes les courses (filtre par statut, recherche par numéro / client / chauffeur)."""
+async def courses(statut: str = "", q: str = "", limite: int = 200, vehicule_id: str = "", chauffeur_id: str = "",
+                  client_id: str = "", u: dict = Depends(exiger(*EQUIPE))):
+    """Toutes les courses (filtre par statut, recherche par numéro / client / chauffeur).
+    Lot 10 : filtres par véhicule, chauffeur ou client (onglet « Courses » des fiches)."""
     filtre: Dict[str, Any] = {}
     if statut:
         filtre["statut"] = statut
+    if vehicule_id:
+        filtre["vehicule.id"] = vehicule_id
+    if chauffeur_id:
+        filtre["chauffeur.id"] = chauffeur_id
+    if client_id:
+        filtre["client.id"] = client_id
     if q:
         motif = {"$regex": re.escape(q), "$options": "i"}
         filtre["$or"] = [{"numero": motif}, {"client.nom": motif}, {"chauffeur.nom": motif}]
@@ -467,7 +475,7 @@ async def _sortie(nom: str, doc: Dict[str, Any], soldes: Optional[Dict[str, Any]
 
 
 @router.get("/{nom}")
-async def lister(nom: str, q: str = "", limite: int = 500, role: str = "", u: dict = Depends(exiger(*ATELIER))):
+async def lister(nom: str, request: Request, q: str = "", limite: int = 500, role: str = "", u: dict = Depends(exiger(*ATELIER))):
     r = _ressource(nom)
     _verifier_role(r, u, ecriture=False)
     filtre: Dict[str, Any] = {}
@@ -476,6 +484,12 @@ async def lister(nom: str, q: str = "", limite: int = 500, role: str = "", u: di
         filtre["$or"] = [{c: motif} for c in r["recherche"]]
     if nom == "utilisateurs" and role:
         filtre["role"] = role
+    # Lot 10 — filtres d'égalité sur les rubriques texte / liste de choix de la ressource (?statut=…, ?vehicule_id=…) :
+    # filtres de l'écran et onglets des fiches (ex. pleins d'énergie d'UN véhicule)
+    for champ, valeur in request.query_params.items():
+        type_ = (r["champs"].get(champ) or ("",))[0]
+        if valeur and (type_ == "str" or type_.startswith("enum:")):
+            filtre[champ] = valeur
     tri = r.get("tri", "id")
     sens = -1 if tri.startswith("-") else 1
     docs = [d async for d in db[r["collection"]].find(filtre, {"_id": 0}).sort(tri.lstrip("-"), sens).limit(min(limite, 2000))]

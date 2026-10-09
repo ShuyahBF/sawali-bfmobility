@@ -47,19 +47,19 @@ export default function Inscription() {
     >
       <form onSubmit={valider} className="space-y-4">
         <div>
-          <label htmlFor="nom" className="mb-1 block text-sm font-bold">{t('ins.nom')}</label>
+          <label htmlFor="nom" className="etiquette">{t('ins.nom')}</label>
           <input id="nom" value={champs.nom} onChange={maj('nom')} required autoComplete="name" className="champ" />
         </div>
         <div>
-          <label htmlFor="tel" className="mb-1 block text-sm font-bold">{t('ins.telephone')}</label>
+          <label htmlFor="tel" className="etiquette">{t('ins.telephone')}</label>
           <input id="tel" type="tel" value={champs.telephone} onChange={maj('telephone')} required autoComplete="tel" className="champ" />
         </div>
         <div>
-          <label htmlFor="email" className="mb-1 block text-sm font-bold">{t('ins.email')}</label>
+          <label htmlFor="email" className="etiquette">{t('ins.email')}</label>
           <input id="email" type="email" value={champs.email} onChange={maj('email')} autoComplete="email" className="champ" />
         </div>
         <div>
-          <label htmlFor="mdp" className="mb-1 block text-sm font-bold">{t('cnx.mdp')}</label>
+          <label htmlFor="mdp" className="etiquette">{t('cnx.mdp')}</label>
           <MotDePasse id="mdp" value={champs.mot_de_passe} onChange={maj('mot_de_passe')} required minLength={6} autoComplete="new-password" />
         </div>
         <button type="submit" disabled={envoi} className="btn-principal w-full py-3 text-base">{t('ins.bouton')}</button>

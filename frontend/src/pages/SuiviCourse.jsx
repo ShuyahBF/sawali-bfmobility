@@ -234,7 +234,7 @@ export default function SuiviCourse() {
         <Messagerie courseId={id} actif={vivante} />
       </Modale>
       <Modale titre={t('suivi.annulerCourse')} ouverte={fenetre === 'annuler'} onFermer={() => setFenetre(null)}>
-        <label htmlFor="motif" className="mb-1 block text-sm font-bold">{t('suivi.motif')}</label>
+        <label htmlFor="motif" className="etiquette">{t('suivi.motif')}</label>
         <input id="motif" value={motif} onChange={(e) => setMotif(e.target.value)} className="champ" />
         <div className="mt-4 flex justify-end gap-2">
           <button type="button" onClick={() => setFenetre(null)} className="btn-secondaire">{t('commun.retour')}</button>
@@ -246,7 +246,7 @@ export default function SuiviCourse() {
         <p className="text-sm text-ardoise">{t(`cmd.${c.paiement?.moyen}`)}</p>
         {c.paiement?.moyen === 'mobile_money' && (
           <div className="mt-4">
-            <label htmlFor="telmm" className="mb-1 block text-sm font-bold">{t('suivi.telMobile')}</label>
+            <label htmlFor="telmm" className="etiquette">{t('suivi.telMobile')}</label>
             <input id="telmm" type="tel" value={telMobile} onChange={(e) => setTelMobile(e.target.value)} className="champ" />
           </div>
         )}

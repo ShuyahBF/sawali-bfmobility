@@ -44,7 +44,7 @@ export default function DevenirChauffeur() {
   // Petit raccourci pour un champ texte avec son libellé
   const champ = (cle, libelle, props = {}) => (
     <div>
-      <label htmlFor={`cand-${cle}`} className="mb-1 block text-sm font-bold">{libelle}{props.required && <span className="text-red-600"> *</span>}</label>
+      <label htmlFor={`cand-${cle}`} className="etiquette">{libelle}{props.required && <span className="text-red-600"> *</span>}</label>
       <input id={`cand-${cle}`} value={champs[cle]} onChange={maj(cle)} className="champ" {...props} />
     </div>
   )
@@ -79,7 +79,7 @@ export default function DevenirChauffeur() {
             {champ('permis_numero', t('cand.permis'))}
             {champ('vehicule_personnel', t('cand.vehicule'), { placeholder: t('cand.vehiculePh') })}
             <div className="sm:col-span-2">
-              <label htmlFor="cand-message" className="mb-1 block text-sm font-bold">{t('cand.message')}</label>
+              <label htmlFor="cand-message" className="etiquette">{t('cand.message')}</label>
               <textarea id="cand-message" value={champs.message} onChange={maj('message')} rows={3} maxLength={1000} className="champ" />
             </div>
             <button type="submit" disabled={envoi} className="btn-principal py-3 text-base sm:col-span-2">{t('cand.envoyer')}</button>

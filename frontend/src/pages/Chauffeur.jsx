@@ -238,7 +238,7 @@ export default function Chauffeur() {
               {/* Avant de terminer : km réel et encaissement espèces */}
               {enCours.statut === 'en_cours' && (
                 <div className="space-y-2 rounded-2xl bg-brume p-3">
-                  <label htmlFor="km" className="block text-sm font-bold">{t('chf.kmReel')}</label>
+                  <label htmlFor="km" className="etiquette">{t('chf.kmReel')}</label>
                   <input id="km" type="number" inputMode="decimal" step="0.1" min="0" value={kmReel} onChange={(e) => setKmReel(e.target.value)} className="champ" />
                   {enCours.paiement?.moyen === 'especes' && (
                     <label className="flex items-center gap-2 text-sm font-bold">
@@ -336,7 +336,7 @@ export default function Chauffeur() {
       <Modale titre={t('chf.desister')} ouverte={fenetre === 'desister' && Boolean(enCours)} onFermer={() => setFenetre(null)}>
         <form onSubmit={desister} className="space-y-3">
           <p className="text-sm text-ardoise">{t('chf.desisterAide')}</p>
-          <label htmlFor="motif-desist" className="block text-sm font-bold">{t('suivi.motif')}</label>
+          <label htmlFor="motif-desist" className="etiquette">{t('suivi.motif')}</label>
           <input id="motif-desist" value={motif} onChange={(e) => setMotif(e.target.value)} className="champ" maxLength={200} />
           <div className="flex justify-end gap-2">
             <button type="button" onClick={() => setFenetre(null)} className="btn-secondaire">{t('commun.retour')}</button>
@@ -356,12 +356,12 @@ export default function Chauffeur() {
           </div>
           {[['quantite', t('chf.quantite')], ['cout', t('chf.cout')], ['kilometrage', t('chf.kilometrage')]].map(([cle, libelle]) => (
             <div key={cle}>
-              <label htmlFor={`en-${cle}`} className="mb-1 block text-sm font-bold">{libelle}</label>
+              <label htmlFor={`en-${cle}`} className="etiquette">{libelle}</label>
               <input id={`en-${cle}`} type="number" inputMode="decimal" step="any" min="0" required value={energie[cle]} onChange={(e) => setEnergie((x) => ({ ...x, [cle]: e.target.value }))} className="champ" />
             </div>
           ))}
           <div>
-            <label htmlFor="en-station" className="mb-1 block text-sm font-bold">{t('chf.station')}</label>
+            <label htmlFor="en-station" className="etiquette">{t('chf.station')}</label>
             <input id="en-station" value={energie.station} onChange={(e) => setEnergie((x) => ({ ...x, station: e.target.value }))} className="champ" />
           </div>
           <button type="submit" className="btn-principal w-full py-3">{t('commun.enregistrer')}</button>

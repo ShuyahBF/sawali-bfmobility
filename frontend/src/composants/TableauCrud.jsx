@@ -20,6 +20,11 @@
 //                   envoyer(ligne, valeurs, outils) } }] → ouvre une modale
 //                 ou, pour un panneau libre (lot 9) : [{ libelle, visible?, panneau: {
 //                   titre(ligne), rendu(ligne, { fermer, recharger }) } }] → ouvre une modale large
+//   sections    : (lot 10) [{ cle, titre, icone? }] — les champs portant « section: cle » sont regroupés dans des
+//                 cadres titrés (identification, technique, énergie, documents…) au lieu d'être mélangés
+//   onglets     : (lot 10) [{ cle, libelle, rendu(ligne) }] — la fiche d'un enregistrement EXISTANT s'ouvre avec des
+//                 onglets : « Fiche » (le formulaire) puis la « vie » de l'objet (ex. pleins, interventions, courses)
+//   resume      : (lot 10) resume(lignes) → bandeau de totaux au-dessus du tableau (ex. coût total de l'énergie)
 //   filtres     : [{ cle, libelle, options:[{valeur, libelle}] }] → ?cle=valeur
 //   ecriture    : false → lecture seule (pas de création/modification/suppression)
 //   suppression : false → pas de bouton Supprimer
@@ -74,12 +79,21 @@ function versApi(champ, valeur) {
   }
 }
 
-export default function TableauCrud({ config }) {
+// Props (lot 10) :
+//   filtreFixe : { champ: valeur } — liste limitée à un objet (ex. { vehicule_id: 'v1' } dans l'onglet « Énergie »
+//                d'un véhicule) ; ce champ est rempli d'office à l'ajout et masqué dans le tableau et le formulaire
+//   compact    : présentation réduite (onglet d'une fiche) : petit titre, pas d'onglets imbriqués
+export default function TableauCrud({ config, filtreFixe = null, compact = false }) {
   const {
-    ressource, titre, description, colonnes = [], champs = [], refs = {}, defaut = {},
+    ressource, titre, description, colonnes: toutesColonnes = [], champs: tousChamps = [], refs = {}, defaut = {},
     versFormulaire, avantEnvoi, actions = [], filtres = [], ecriture = true, suppression = true,
-    entete,
+    entete, sections = [], onglets = [], resume,
   } = config
+  // Champs et colonnes fixés par le filtre : inutiles à l'écran (toujours la même valeur)
+  const clesFixes = Object.keys(filtreFixe || {})
+  const champs = tousChamps.filter((c) => !clesFixes.includes(c.cle))
+  const colonnes = toutesColonnes.filter((c) => !clesFixes.includes(c.cle))
+  const [onglet, setOnglet] = useState('fiche')   // onglet ouvert de la fiche
   const toast = useToasts()
   const { t } = useLangue()
   const [lignes, setLignes] = useState([])
@@ -100,6 +114,7 @@ export default function TableauCrud({ config }) {
     const params = { limite: 300 }
     if (recherche.trim()) params.q = recherche.trim()
     Object.entries(valeursFiltres).forEach(([k, v]) => { if (v) params[k] = v })
+    Object.entries(filtreFixe || {}).forEach(([k, v]) => { params[k] = v })   // lot 10 : onglet d'une fiche
     const appel = api.get(`/admin/${ressource}`, { params })
     try {
       const { data } = silencieux ? await appel : await toast.attente(appel)
@@ -110,7 +125,7 @@ export default function TableauCrud({ config }) {
       setCharge(true)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ressource, recherche, valeursFiltres])
+  }, [ressource, recherche, valeursFiltres, JSON.stringify(filtreFixe || {})])
 
   // Rechargement 400 ms après la dernière frappe dans la recherche
   useEffect(() => {
@@ -144,7 +159,8 @@ export default function TableauCrud({ config }) {
     const source = ligne ? (versFormulaire ? versFormulaire(ligne) : ligne) : structuredClone(defaut)
     let valeurs = {}
     champs.forEach((c) => { valeurs = ecrire(valeurs, c.cle, versSaisie(c, lire(source, c.cle))) })
-    setFormulaire({ id: ligne?.id ?? null, valeurs })
+    setOnglet('fiche')
+    setFormulaire({ id: ligne?.id ?? null, valeurs, ligne: ligne || null })
   }
 
   // --- Enregistrement (POST pour un nouveau, PATCH pour une modification)
@@ -158,6 +174,7 @@ export default function TableauCrud({ config }) {
       if (c.type === 'motdepasse' && !v) return
       corps = ecrire(corps, c.cle, v)
     })
+    Object.entries(filtreFixe || {}).forEach(([k, v]) => { corps = ecrire(corps, k, v) })   // lot 10
     if (avantEnvoi) corps = avantEnvoi(corps, formulaire)
     setEnvoi(true)
     try {
@@ -227,10 +244,12 @@ export default function TableauCrud({ config }) {
   return (
     <section>
       {/* En-tête : titre, recherche, filtres, bouton Ajouter */}
-      <header className="mb-4 flex flex-wrap items-end gap-3">
+      <header className={`flex flex-wrap items-end gap-3 ${compact ? 'mb-3' : 'mb-4'}`}>
         <div className="mr-auto">
-          <h1 className="font-display text-2xl font-bold text-nuit">{titre}</h1>
-          {description && <p className="mt-1 max-w-prose text-sm text-ardoise">{description}</p>}
+          {compact
+            ? <h3 className="font-display text-base font-bold text-nuit">{titre}</h3>
+            : <h1 className="font-display text-2xl font-bold text-nuit">{titre}</h1>}
+          {description && !compact && <p className="mt-1 max-w-prose text-sm text-ardoise">{description}</p>}
         </div>
         <label className="relative">
           <span className="sr-only">{t('crud.rechercher')}</span>
@@ -247,6 +266,9 @@ export default function TableauCrud({ config }) {
       </header>
 
       {entete}
+
+      {/* Lot 10 — bandeau de totaux (ex. coût total de l'énergie d'un véhicule) */}
+      {resume && charge && lignes.length > 0 && <div className="mb-3">{resume(lignes)}</div>}
 
       {/* Tableau (défilement horizontal sur petit écran) */}
       <div className="overflow-x-auto rounded-2xl bg-white ring-1 ring-nuit/10">
@@ -293,25 +315,56 @@ export default function TableauCrud({ config }) {
       </div>
       <p className="mt-2 text-xs text-ardoise">{t('crud.compte', { n: lignes.length })}{ecriture && ` ${t('crud.doubleClic')}`}</p>
 
-      {/* Formulaire de création / modification */}
-      <Modale titre={formulaire?.id == null ? t('crud.titreAjout', { titre }) : t('crud.titreModif', { titre })} ouverte={Boolean(formulaire)} onFermer={() => setFormulaire(null)} large={champs.length > 8}>
+      {/* Formulaire de création / modification — lot 10 : champs regroupés par sections, et pour un enregistrement
+          existant, fiche à ONGLETS (« Fiche » puis la vie de l'objet : pleins, interventions, courses…) */}
+      <Modale
+        titre={formulaire?.id == null ? t('crud.titreAjout', { titre }) : (config.titreFiche && formulaire?.ligne ? config.titreFiche(formulaire.ligne) : t('crud.titreModif', { titre }))}
+        ouverte={Boolean(formulaire)}
+        onFermer={() => setFormulaire(null)}
+        large={champs.length > 8 || sections.length > 0}
+        taille={formulaire?.id != null && onglets.length > 0 && !compact ? 'xl' : ''}
+      >
         {formulaire && (
-          <form onSubmit={enregistrer} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {champs.filter((c) => !c.visible || c.visible(formulaire.valeurs)).map((c) => (
-              <Champ
-                key={c.cle}
-                champ={c}
-                valeur={lire(formulaire.valeurs, c.cle)}
-                listesRef={listesRef}
-                refs={refs}
-                onChange={(v) => setFormulaire((f) => ({ ...f, valeurs: ecrire(f.valeurs, c.cle, v) }))}
-              />
-            ))}
-            <div className="flex justify-end gap-2 sm:col-span-2">
-              <button type="button" onClick={() => setFormulaire(null)} className="btn-secondaire">{t('commun.annuler')}</button>
-              <button type="submit" disabled={envoi} className="btn-principal">{t('commun.enregistrer')}</button>
-            </div>
-          </form>
+          <>
+            {formulaire.id != null && onglets.length > 0 && !compact && (
+              <nav className="onglets" role="tablist" aria-label={titre}>
+                {[{ cle: 'fiche', libelle: t('crud.onglet.fiche') }, ...onglets].map((o) => (
+                  <button key={o.cle} type="button" role="tab" aria-selected={onglet === o.cle} onClick={() => setOnglet(o.cle)}
+                          className={`onglet ${onglet === o.cle ? 'onglet-actif' : ''}`}>
+                    {o.icone && <span aria-hidden="true">{o.icone}</span>} {o.libelle}
+                  </button>
+                ))}
+              </nav>
+            )}
+            {/* Hauteur minimale identique pour tous les onglets : la fenêtre ne « saute » pas d'un onglet à l'autre */}
+            {onglet !== 'fiche' && formulaire.ligne
+              ? <div role="tabpanel" className="min-h-[50vh]">{onglets.find((o) => o.cle === onglet)?.rendu(formulaire.ligne)}</div>
+              : (
+                <form onSubmit={enregistrer} className="space-y-4" role="tabpanel">
+                  {groupesDeChamps(champs.filter((c) => !c.visible || c.visible(formulaire.valeurs)), sections).map((g) => (
+                    <fieldset key={g.cle} className={g.titre ? 'cadre-section' : ''}>
+                      {g.titre && <legend className="titre-section">{g.icone && <span aria-hidden="true">{g.icone}</span>} {g.titre}</legend>}
+                      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        {g.champs.map((c) => (
+                          <Champ
+                            key={c.cle}
+                            champ={c}
+                            valeur={lire(formulaire.valeurs, c.cle)}
+                            listesRef={listesRef}
+                            refs={refs}
+                            onChange={(v) => setFormulaire((f) => ({ ...f, valeurs: ecrire(f.valeurs, c.cle, v) }))}
+                          />
+                        ))}
+                      </div>
+                    </fieldset>
+                  ))}
+                  <div className="flex justify-end gap-2">
+                    <button type="button" onClick={() => setFormulaire(null)} className="btn-secondaire">{t('commun.annuler')}</button>
+                    <button type="submit" disabled={envoi} className="btn-principal">{t('commun.enregistrer')}</button>
+                  </div>
+                </form>
+              )}
+          </>
         )}
       </Modale>
 
@@ -348,6 +401,14 @@ export default function TableauCrud({ config }) {
   )
 }
 
+// --- Lot 10 : champs regroupés par section, dans l'ordre des sections déclarées (champs sans section en premier)
+function groupesDeChamps(champs, sections) {
+  if (!sections.length) return [{ cle: 'tous', champs }]
+  const groupes = [{ cle: '_', champs: champs.filter((c) => !c.section || !sections.some((s) => s.cle === c.section)) }]
+  sections.forEach((s) => groupes.push({ ...s, champs: champs.filter((c) => c.section === s.cle) }))
+  return groupes.filter((g) => g.champs.length > 0)
+}
+
 // --- Affichage par défaut d'une valeur dans une cellule
 function affichageSimple(v, t) {
   if (v == null || v === '') return '—'
@@ -381,10 +442,10 @@ function Champ({ champ, valeur, onChange, listesRef, refs }) {
     const maj = (i, k, v) => onChange(liste.map((l, j) => (j === i ? { ...l, [k]: v } : l)))
     return (
       <fieldset className={classeBloc}>
-        <legend className="mb-1 text-sm font-bold text-nuit">{libelle}</legend>
+        <legend className="etiquette">{libelle}</legend>
         <div className="space-y-2">
           {liste.map((l, i) => (
-            <div key={i} className="flex flex-wrap items-end gap-2 rounded-xl bg-brume p-2">
+            <div key={i} className="flex flex-wrap items-end gap-2 rounded-xl bg-white p-2 ring-1 ring-nuit/10">
               {(champ.sousChamps || []).map((sc) => (
                 <div key={sc.cle} className={sc.type === 'ref' ? 'min-w-[10rem] flex-1' : 'w-28'}>
                   <Champ champ={sc} valeur={l[sc.cle]} onChange={(v) => maj(i, sc.cle, v)} listesRef={listesRef} refs={refs} />
@@ -423,7 +484,7 @@ function Champ({ champ, valeur, onChange, listesRef, refs }) {
   }
   return (
     <div className={classeBloc}>
-      <label htmlFor={id} className="mb-1 block text-sm font-bold text-nuit">{libelle}{requis && <span className="text-red-600"> *</span>}</label>
+      <label htmlFor={id} className="etiquette">{libelle}{requis && <span className="text-red-600"> *</span>}</label>
       {controle}
       {aide && <p className="mt-1 text-xs text-ardoise">{aide}</p>}
     </div>

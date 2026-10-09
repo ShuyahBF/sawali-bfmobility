@@ -254,7 +254,7 @@ export default function Commander() {
               {/* Durée (location à l'heure / à la journée) */}
               {mode !== 'course' && (
                 <div>
-                  <label htmlFor="duree" className="mb-1 block text-sm font-bold">{t('cmd.duree')}</label>
+                  <label htmlFor="duree" className="etiquette">{t('cmd.duree')}</label>
                   <select id="duree" value={duree} onChange={(e) => setDuree(Number(e.target.value))} className="champ">
                     {(mode === 'heure' ? [1, 2, 3, 4, 5, 6, 8, 10, 12] : [1, 2, 3, 4, 5, 6, 7]).map((n) => (
                       <option key={n} value={n}>{mode === 'heure' ? t('cmd.heures', { n }) : t('cmd.jours', { n })}</option>
@@ -381,7 +381,7 @@ export default function Commander() {
 
               {/* Mot pour le chauffeur */}
               <div>
-                <label htmlFor="note" className="mb-1 block text-sm font-bold">{t('cmd.note')}</label>
+                <label htmlFor="note" className="etiquette">{t('cmd.note')}</label>
                 <textarea id="note" value={note} onChange={(e) => setNote(e.target.value)} rows={2} maxLength={300} placeholder={t('cmd.notePh')} className="champ" />
               </div>
 

@@ -132,11 +132,11 @@ export default function Connexion() {
       {onglet === 'mdp' && (
         <form onSubmit={validerMdp} className="space-y-4">
           <div>
-            <label htmlFor="identifiant" className="mb-1 block text-sm font-bold">{t('cnx.identifiant')}</label>
+            <label htmlFor="identifiant" className="etiquette">{t('cnx.identifiant')}</label>
             <input id="identifiant" value={identifiant} onChange={(e) => setIdentifiant(e.target.value)} required autoComplete="username" className="champ" />
           </div>
           <div>
-            <label htmlFor="mdp" className="mb-1 block text-sm font-bold">{t('cnx.mdp')}</label>
+            <label htmlFor="mdp" className="etiquette">{t('cnx.mdp')}</label>
             <MotDePasse id="mdp" value={mdp} onChange={(e) => setMdp(e.target.value)} required autoComplete="current-password" />
           </div>
           <button type="submit" disabled={envoi} className="btn-principal w-full py-3 text-base">{t('cnx.bouton')}</button>
@@ -147,7 +147,7 @@ export default function Connexion() {
       {onglet === 'code' && !demande && (
         <form onSubmit={demanderCode} className="space-y-4">
           <div>
-            <label htmlFor="tel-otp" className="mb-1 block text-sm font-bold">{t('ins.telephone')}</label>
+            <label htmlFor="tel-otp" className="etiquette">{t('ins.telephone')}</label>
             <input id="tel-otp" type="tel" value={telephone} onChange={(e) => setTelephone(e.target.value)} required autoComplete="tel" className="champ" placeholder="+226 70 00 00 00" />
             <p className="mt-1 text-xs text-ardoise">{t('otp.aide')}</p>
           </div>
@@ -162,7 +162,7 @@ export default function Connexion() {
             {t(demande.canal === 'sms' ? 'otp.envoyeSms' : 'otp.envoyeWhatsapp', { n: demande.duree_min ?? 10 })} <b>{telephone}</b>
           </p>
           <div>
-            <label htmlFor="code-otp" className="mb-1 block text-sm font-bold">{t('otp.code')}</label>
+            <label htmlFor="code-otp" className="etiquette">{t('otp.code')}</label>
             <input
               id="code-otp" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
               inputMode="numeric" autoComplete="one-time-code" required maxLength={6}
@@ -172,7 +172,7 @@ export default function Connexion() {
           {/* Nouveau compte : le nom est demandé */}
           {!demande.compte_existant && (
             <div>
-              <label htmlFor="nom-otp" className="mb-1 block text-sm font-bold">{t('otp.nom')}</label>
+              <label htmlFor="nom-otp" className="etiquette">{t('otp.nom')}</label>
               <input id="nom-otp" value={nom} onChange={(e) => setNom(e.target.value)} required autoComplete="name" className="champ" />
               <p className="mt-1 text-xs text-ardoise">{t('otp.nouveauCompte')}</p>
             </div>

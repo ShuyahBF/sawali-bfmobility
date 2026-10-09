@@ -7,9 +7,9 @@ export default function Etoiles({ valeur = 0, onChange, taille = 'text-2xl' }) {
       {[1, 2, 3, 4, 5].map((n) => (
         onChange ? (
           <button key={n} type="button" role="radio" aria-checked={valeur === n} aria-label={`${n} / 5`} onClick={() => onChange(n)}
-            className={`leading-none transition-transform hover:scale-110 ${n <= valeur ? 'text-ambre-500' : 'text-slate-300'}`}>★</button>
+            className={`leading-none transition-transform hover:scale-110 ${n <= valeur ? 'text-volt-500' : 'text-slate-300'}`}>★</button>
         ) : (
-          <span key={n} aria-hidden="true" className={n <= Math.round(valeur) ? 'text-ambre-500' : 'text-slate-300'}>★</span>
+          <span key={n} aria-hidden="true" className={n <= Math.round(valeur) ? 'text-volt-500' : 'text-slate-300'}>★</span>
         )
       ))}
     </div>

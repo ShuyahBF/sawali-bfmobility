@@ -149,7 +149,7 @@ export default function SuiviCourse() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-display text-xl font-bold">{c.chauffeur.nom}</p>
-                  {c.chauffeur.note_moyenne != null && <p className="text-sm text-ambre-500">★ {Number(c.chauffeur.note_moyenne).toFixed(1)}</p>}
+                  {c.chauffeur.note_moyenne != null && <p className="text-sm text-volt-600">★ {Number(c.chauffeur.note_moyenne).toFixed(1)}</p>}
                 </div>
               </div>
               {c.vehicule && (

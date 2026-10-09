@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 8,
+    date: '09/10/2026',
+    titre: 'Nouveau style du site',
+    description: 'Palette indigo et jaune soleil, titres en police Unbounded, simulateur de prix en forme de billet et tarifs présentés en lignes comparatives.',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 7,
     date: '09/10/2026',
     titre: 'Assistance pour les clients et les chauffeurs',

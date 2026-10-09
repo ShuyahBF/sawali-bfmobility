@@ -3,7 +3,7 @@
 //   taille  : diamètre en pixels
 //   couleur : couleur de l'arc (vert électrique par défaut)
 // ============================================================================
-export default function Jauge({ taille = 40, couleur = '#14C97E', epaisseur = 4, libelle = 'Patientez…' }) {
+export default function Jauge({ taille = 40, couleur = '#FFC629', epaisseur = 4, libelle = 'Patientez…' }) {
   const r = (taille - epaisseur) / 2
   const circonference = 2 * Math.PI * r
   return (

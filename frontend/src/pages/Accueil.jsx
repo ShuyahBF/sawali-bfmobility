@@ -9,12 +9,21 @@ import BadgeEnergie from '@/composants/BadgeEnergie.jsx'
 import { useConfig } from '@/contexte/Config.jsx'
 import { useLangue } from '@/i18n/index.jsx'
 
-// Fond du héros : plan de ville stylisé + trajet A → B tracé une seule fois au chargement
+// Fond du héros : plan de ville stylisé (rues de Ouaga vues d'en haut) + trajet A → B tracé une seule fois
+// au chargement. Refonte 09/10/2026 : trajet jaune soleil, arrivée fuchsia, halo de lumière derrière le billet.
 function PlanVille() {
   return (
     <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 1200 700" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-      {/* Rues : quadrillage irrégulier très discret */}
-      <g stroke="#ffffff" strokeOpacity="0.06" strokeWidth="10" fill="none" strokeLinecap="round">
+      <defs>
+        {/* Halo chaud derrière le simulateur (lumière de fin de journée) */}
+        <radialGradient id="halo" cx="0.78" cy="0.45" r="0.5">
+          <stop offset="0" stopColor="#3D3690" stopOpacity="0.9" />
+          <stop offset="1" stopColor="#1A1650" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <rect width="1200" height="700" fill="url(#halo)" />
+      {/* Grandes avenues (traits épais) et rues (traits fins), très discrètes */}
+      <g stroke="#ffffff" strokeOpacity="0.07" strokeWidth="14" fill="none" strokeLinecap="round">
         <path d="M-20 120 C300 90 520 160 1220 110" />
         <path d="M-20 330 C260 300 640 380 1220 300" />
         <path d="M-20 560 C400 520 700 600 1220 540" />
@@ -22,56 +31,61 @@ function PlanVille() {
         <path d="M520 -20 C560 220 470 470 540 720" />
         <path d="M880 -20 C840 260 930 420 900 720" />
       </g>
-      <g stroke="#ffffff" strokeOpacity="0.035" strokeWidth="4" fill="none">
+      <g stroke="#ffffff" strokeOpacity="0.04" strokeWidth="3" fill="none">
         <path d="M-20 220 L1220 240" /><path d="M-20 450 L1220 430" /><path d="M360 -20 L330 720" /><path d="M720 -20 L760 720" /><path d="M1060 -20 L1040 720" />
+        <path d="M-20 40 L1220 60" /><path d="M-20 650 L1220 630" /><path d="M60 -20 L90 720" />
       </g>
-      {/* Trajet : ruban vert qui se dessine (une seule animation sur la page),
-          tracé à droite, derrière le simulateur, pour ne jamais couvrir le texte */}
+      {/* Trajet : ruban jaune qui se dessine (la seule animation de la page), à droite derrière le billet */}
       <path
         d="M640 690 C700 600 640 520 760 470 S1020 420 1060 300 S1080 160 1100 120"
-        fill="none" stroke="#2EE59D" strokeWidth="6" strokeLinecap="round"
+        fill="none" stroke="#FFC629" strokeWidth="7" strokeLinecap="round"
         pathLength="1" strokeDasharray="1" className="animate-trace motion-reduce:animate-none"
         style={{ strokeDashoffset: 1 }}
       />
-      {/* Points A et B */}
-      <circle cx="640" cy="690" r="14" fill="#2EE59D" /><circle cx="640" cy="690" r="5" fill="#0B1F3A" />
-      <circle cx="1100" cy="120" r="14" fill="#F5A524" /><circle cx="1100" cy="120" r="5" fill="#0B1F3A" />
+      {/* Points A (départ, jaune) et B (arrivée, fuchsia) */}
+      <circle cx="640" cy="690" r="15" fill="#FFC629" /><circle cx="640" cy="690" r="5" fill="#1A1650" />
+      <circle cx="1100" cy="120" r="15" fill="#D62B63" /><circle cx="1100" cy="120" r="5" fill="#ffffff" />
     </svg>
   )
 }
 
-// Carte d'une catégorie (tarifs publics)
-function CarteCategorie({ cat }) {
+// Ligne d'une catégorie (tarifs publics) — refonte 09/10/2026 : une LIGNE par catégorie pour comparer d'un coup d'œil
+// (nom et énergies | prix au km en grand | heure, jour, prise en charge | disponibilité et bouton « Choisir »)
+function LigneCategorie({ cat }) {
   const { t } = useLangue()
   const { monnaie } = useConfig()
   return (
-    <article className="relative flex flex-col rounded-3xl bg-white p-5 ring-1 ring-nuit/10">
-      {/* Ruban promo */}
-      {cat.promo_active && cat.promo && (
-        <span className="absolute -top-3 right-4 rounded-full bg-ambre-500 px-3 py-1 text-xs font-bold text-nuit shadow">
-          −{cat.promo.pourcentage} % {cat.promo.libelle || ''}
-        </span>
-      )}
-      <div className="flex flex-wrap gap-1">{(cat.energies || []).map((e) => <BadgeEnergie key={e} energie={e} />)}</div>
-      <h3 className="mt-3 text-2xl font-bold">{cat.nom}</h3>
-      <p className="mt-1 text-sm text-ardoise">{cat.description}</p>
+    <li className="group grid gap-4 py-6 md:grid-cols-[1.3fr_1fr_1.2fr_auto] md:items-center md:gap-8">
+      <div>
+        <div className="flex flex-wrap items-center gap-2">
+          <h3 className="text-xl font-bold sm:text-2xl">{cat.nom}</h3>
+          {/* Promotion en cours */}
+          {cat.promo_active && cat.promo && (
+            <span className="rounded-full bg-ambre-500 px-2.5 py-0.5 text-xs font-bold text-white">
+              −{cat.promo.pourcentage} % {cat.promo.libelle || ''}
+            </span>
+          )}
+        </div>
+        <p className="mt-1 text-sm text-ardoise">{cat.description}</p>
+        <div className="mt-2 flex flex-wrap gap-1">{(cat.energies || []).map((e) => <BadgeEnergie key={e} energie={e} />)}</div>
+      </div>
       {/* Prix principal : au km */}
-      <p className="mt-4 font-display text-3xl font-extrabold tabular-nums">
-        {monnaie(cat.prix_km)} <span className="text-base font-medium text-ardoise">/ {t('accueil.parKm')}</span>
+      <p className="font-display text-3xl font-bold tabular-nums sm:text-4xl">
+        {monnaie(cat.prix_km)}<span className="ml-1 font-sans text-base font-normal text-ardoise">/ {t('accueil.parKm')}</span>
       </p>
-      <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-sm">
         <dt className="text-ardoise">{t('accueil.parHeure')}</dt><dd className="text-right font-bold tabular-nums">{monnaie(cat.prix_heure)}</dd>
         <dt className="text-ardoise">{t('accueil.parJour')}</dt><dd className="text-right font-bold tabular-nums">{monnaie(cat.prix_jour)}</dd>
         <dt className="text-ardoise">{t('accueil.priseEnCharge')}</dt><dd className="text-right tabular-nums">{monnaie(cat.prise_en_charge)}</dd>
-        <dt className="text-ardoise">{t('accueil.minimum')}</dt><dd className="text-right tabular-nums">{monnaie(cat.minimum)}</dd>
-      </dl>
-      <div className="mt-auto flex items-center justify-between gap-2 pt-4 text-sm">
-        <span className="text-ardoise">{t('accueil.places', { n: cat.places })}{cat.confort?.length ? ` · ${cat.confort.slice(0, 2).join(', ')}` : ''}</span>
-        <span className={`font-bold ${cat.vehicules_disponibles ? 'text-volt-700' : 'text-ardoise'}`}>
+        <dt className="text-ardoise">{t('accueil.places', { n: cat.places })}</dt>
+        <dd className={`text-right font-bold ${cat.vehicules_disponibles ? 'text-nuit' : 'text-ardoise'}`}>
           {cat.vehicules_disponibles ? t('accueil.dispo', { n: cat.vehicules_disponibles }) : t('accueil.aucunDispo')}
-        </span>
-      </div>
-    </article>
+        </dd>
+      </dl>
+      <Link to="/commander" state={{ categorie: cat.code }} className="btn-secondaire justify-self-start md:justify-self-end">
+        {t('accueil.cta')}
+      </Link>
+    </li>
   )
 }
 
@@ -95,15 +109,16 @@ export default function Accueil() {
       {/* ---------- Héros ---------- */}
       <section className="relative overflow-hidden bg-nuit text-white">
         <PlanVille />
-        <div className="relative mx-auto grid max-w-6xl items-center gap-10 px-4 pb-16 pt-10 lg:grid-cols-[1.15fr_1fr] lg:pb-24 lg:pt-16">
+        <div className="relative mx-auto grid max-w-6xl items-center gap-12 px-4 pb-20 pt-12 lg:grid-cols-[1.1fr_1fr] lg:pb-28 lg:pt-20">
           <div>
-            <h1 className="max-w-xl text-[2.6rem] font-extrabold leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">
+            {/* Titre en Unbounded, large et serré : la signature typographique du site */}
+            <h1 className="max-w-xl text-[2.4rem] font-extrabold sm:text-6xl lg:text-[4.4rem]">
               {t('accueil.titre')}
             </h1>
-            <p className="mt-6 max-w-lg text-lg text-white/75">{t('accueil.sousTitre')}</p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/commander" className="btn-principal px-6 py-3 text-base">{t('accueil.cta')}</Link>
-              <a href="#tarifs" className="inline-flex items-center rounded-xl px-6 py-3 font-bold text-white ring-1 ring-white/25 hover:bg-white/10">{t('accueil.ctaTarifs')}</a>
+            <p className="mt-6 max-w-md text-lg leading-relaxed text-white/75">{t('accueil.sousTitre')}</p>
+            <div className="mt-9 flex flex-wrap items-center gap-3">
+              <Link to="/commander" className="btn-principal px-7 py-3.5 text-base">{t('accueil.cta')}</Link>
+              <a href="#tarifs" className="inline-flex items-center rounded-full px-6 py-3 font-bold text-white ring-1 ring-white/30 transition hover:bg-white/10">{t('accueil.ctaTarifs')}</a>
             </div>
             {/* Les trois énergies proposées */}
             <ul className="mt-10 flex flex-wrap gap-x-6 gap-y-2 text-sm text-white/70">
@@ -117,33 +132,38 @@ export default function Accueil() {
       </section>
 
       {/* ---------- Catégories et tarifs ---------- */}
-      <section id="tarifs" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-16">
-        <h2 className="text-3xl font-bold sm:text-4xl">{t('accueil.categories')}</h2>
-        <p className="mt-2 max-w-prose text-ardoise">{t('accueil.categoriesTexte')}</p>
-        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.map((c) => <CarteCategorie key={c.code} cat={c} />)}
-          {categories.length === 0 && <p className="text-ardoise">{t('commun.chargement')}</p>}
-        </div>
+      <section id="tarifs" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20">
+        <h2 className="text-3xl font-bold sm:text-[2.6rem]">{t('accueil.categories')}</h2>
+        <p className="mt-3 max-w-prose text-ardoise">{t('accueil.categoriesTexte')}</p>
+        {/* Liste comparative : une ligne par catégorie, séparées par un filet */}
+        <ul className="mt-8 divide-y divide-nuit/10 border-y border-nuit/10">
+          {categories.map((c) => <LigneCategorie key={c.code} cat={c} />)}
+          {categories.length === 0 && <li className="py-6 text-ardoise">{t('commun.chargement')}</li>}
+        </ul>
       </section>
 
       {/* ---------- Location avec chauffeur ---------- */}
       <section className="mx-auto max-w-6xl px-4">
-        <div className="flex flex-col items-start gap-6 rounded-[32px] bg-ambre-500 p-8 text-nuit sm:p-10 md:flex-row md:items-center">
+        {/* Location avec chauffeur : bandeau indigo, bouton jaune */}
+        <div className="flex flex-col items-start gap-6 rounded-[36px] bg-nuit-700 p-8 text-white sm:p-12 md:flex-row md:items-center">
           <div className="flex-1">
             <h2 className="text-3xl font-bold">{t('accueil.location')}</h2>
-            <p className="mt-2 max-w-prose">{t('accueil.locationTexte')}</p>
+            <p className="mt-3 max-w-prose text-white/75">{t('accueil.locationTexte')}</p>
           </div>
-          <Link to="/commander" state={{ mode: 'heure' }} className="btn-nuit px-6 py-3">{t('accueil.locationCta')}</Link>
+          <Link to="/commander" state={{ mode: 'heure' }} className="btn-principal px-7 py-3.5">{t('accueil.locationCta')}</Link>
         </div>
       </section>
 
       {/* ---------- Avantages ---------- */}
-      <section className="mx-auto max-w-6xl px-4 py-16">
-        <h2 className="text-3xl font-bold sm:text-4xl">{t('accueil.avantages')}</h2>
+      <section className="mx-auto max-w-6xl px-4 py-20">
+        <h2 className="text-3xl font-bold sm:text-[2.6rem]">{t('accueil.avantages')}</h2>
         <div className="mt-8 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
           {avantages.map(([icone, cle]) => (
             <div key={cle}>
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#0E9E62" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{ICONES[icone]}</svg>
+              {/* Pictogramme dans une pastille jaune */}
+              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-volt-500">
+                <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1A1650" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{ICONES[icone]}</svg>
+              </span>
               <h3 className="mt-3 text-lg font-bold">{t(`accueil.${cle}.titre`)}</h3>
               <p className="mt-1 text-ardoise">{t(`accueil.${cle}.texte`)}</p>
             </div>

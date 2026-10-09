@@ -57,11 +57,14 @@ export default function Simulateur() {
   const commander = () => naviguer('/commander', { state: { depart, arrivee, categorie: code } })
 
   return (
-    <div className="rounded-[28px] bg-white p-5 text-nuit shadow-2xl shadow-black/30 sm:p-6">
-      <h2 className="font-display text-xl font-bold">{t('simu.titre')}</h2>
+    // Refonte 09/10/2026 : le simulateur est un « billet de course » — trajet en haut, souche détachable en bas
+    // (bord perforé) qui porte le prix en grand et le bouton de commande.
+    <div className="billet text-nuit shadow-[0_30px_60px_-20px_rgba(0,0,0,0.55)]">
+      <div className="rounded-t-[30px] bg-white p-5 pb-6 sm:p-7 sm:pb-7">
+      <h2 className="font-display text-lg font-bold sm:text-xl">{t('simu.titre')}</h2>
       <div className="mt-4 space-y-2">
-        <RechercheAdresse valeur={depart} onChoix={setDepart} placeholder={t('cmd.departPh')} lettre="A" pastille="bg-volt-400" />
-        <RechercheAdresse valeur={arrivee} onChoix={setArrivee} placeholder={t('cmd.arriveePh')} lettre="B" pastille="bg-ambre-500" />
+        <RechercheAdresse valeur={depart} onChoix={setDepart} placeholder={t('cmd.departPh')} lettre="A" pastille="bg-volt-400 text-nuit" />
+        <RechercheAdresse valeur={arrivee} onChoix={setArrivee} placeholder={t('cmd.arriveePh')} lettre="B" pastille="bg-ambre-500 text-white" />
         <button type="button" onClick={prendrePosition} className="text-sm font-bold text-volt-700 hover:underline">
           ◎ {t('cmd.maPosition')}
         </button>
@@ -77,7 +80,7 @@ export default function Simulateur() {
               role="radio"
               aria-checked={c.code === code}
               onClick={() => setCategorie(c.code)}
-              className={`rounded-full px-3 py-1.5 text-sm font-bold transition ${c.code === code ? 'bg-nuit text-white' : 'bg-brume text-nuit hover:bg-volt-50'}`}
+              className={`rounded-full px-3.5 py-1.5 text-sm font-bold transition ${c.code === code ? 'bg-nuit text-white' : 'bg-brume text-nuit hover:bg-volt-100'}`}
             >
               {c.nom}
             </button>
@@ -88,37 +91,38 @@ export default function Simulateur() {
       )}
       {cat && <div className="mt-2 flex flex-wrap gap-1">{(cat.energies || []).map((e) => <BadgeEnergie key={e} energie={e} />)}</div>}
 
-      {/* Résultat */}
-      <div className="mt-5 rounded-2xl bg-brume p-4" aria-live="polite">
+      </div>
+      {/* Souche du billet : bord perforé (CSS .billet-souche), prix en grand et commande */}
+      <div className="billet-souche rounded-b-[30px] bg-volt-500 p-5 sm:p-7" aria-live="polite">
         {estimation ? (
           <>
             <div className="flex items-end justify-between gap-3">
               <div>
-                <p className="text-xs text-ardoise">{t('simu.prix')}</p>
-                <p className="font-display text-3xl font-extrabold tabular-nums">{monnaie(estimation.prix, estimation.devise)}</p>
+                <p className="text-sm font-bold text-nuit/70">{t('simu.prix')}</p>
+                <p className="font-display text-4xl font-extrabold tabular-nums">{monnaie(estimation.prix, estimation.devise)}</p>
                 {estimation.prix_sans_promo > estimation.prix && (
-                  <p className="text-sm text-ardoise line-through">{t('simu.sansPromo', { prix: monnaie(estimation.prix_sans_promo, estimation.devise) })}</p>
+                  <p className="text-sm text-nuit/70 line-through">{t('simu.sansPromo', { prix: monnaie(estimation.prix_sans_promo, estimation.devise) })}</p>
                 )}
               </div>
-              <div className="text-right text-sm text-ardoise tabular-nums">
+              <div className="text-right text-sm font-bold text-nuit/75 tabular-nums">
                 <p>{distance(estimation.distance_km)}</p>
                 <p>{formatDuree(estimation.duree_min)}</p>
               </div>
             </div>
             <div className="mt-2 flex flex-wrap gap-2">
-              {estimation.majoration_nuit && <span className="rounded-full bg-nuit px-2.5 py-1 text-xs font-bold text-ambre-500">☾ {t('simu.nuit')}</span>}
+              {estimation.majoration_nuit && <span className="rounded-full bg-nuit px-2.5 py-1 text-xs font-bold text-volt-400">☾ {t('simu.nuit')}</span>}
               {cat?.energies?.includes('electrique') && <Co2 km={estimation.distance_km} />}
               {/* Distance calculée par la route ou estimée (lot 2) */}
               <BadgeDistance source={estimation.source_distance} />
             </div>
           </>
         ) : (
-          <p className="text-sm text-ardoise">{t('simu.astuce')}</p>
+          <p className="text-sm font-bold text-nuit/75">{t('simu.astuce')}</p>
         )}
-      </div>
-      <button type="button" onClick={commander} className="btn-principal mt-4 w-full py-3 text-base">
+      <button type="button" onClick={commander} className="btn-nuit mt-4 w-full py-3.5 text-base">
         {estimation ? t('simu.commander') : t('accueil.cta')}
       </button>
+      </div>
     </div>
   )
 }

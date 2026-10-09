@@ -64,7 +64,7 @@ export default function TableauDeBord() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <h1 className="text-3xl font-bold">{t('adm.menu.tableauDeBord')}</h1>
-        {tb.alertes > 0 && <Link to="/admin/alertes" className="rounded-full bg-ambre-500 px-4 py-2 text-sm font-bold text-nuit">{t('adm.tb.alertes', { n: tb.alertes })}</Link>}
+        {tb.alertes > 0 && <Link to="/admin/alertes" className="rounded-full bg-ambre-500 px-4 py-2 text-sm font-bold text-white">{t('adm.tb.alertes', { n: tb.alertes })}</Link>}
       </header>
 
       {/* Indicateurs */}
@@ -95,9 +95,9 @@ export default function TableauDeBord() {
           <h2 className="text-lg font-bold">{t('adm.tb.parc', { n: v.total || 0 })}</h2>
           <div className="mt-4">
             <BarreRepartition segments={[
-              { libelle: t('adm.tb.disponibles'), valeur: v.disponibles || 0, couleur: '#14C97E' },
+              { libelle: t('adm.tb.disponibles'), valeur: v.disponibles || 0, couleur: '#FFC629' },
               { libelle: t('adm.tb.enService'), valeur: v.en_service || 0, couleur: '#1E4378' },
-              { libelle: t('adm.tb.maintenance'), valeur: v.maintenance || 0, couleur: '#F5A524' },
+              { libelle: t('adm.tb.maintenance'), valeur: v.maintenance || 0, couleur: '#E8336D' },
               { libelle: t('adm.tb.autres'), valeur: Math.max(0, (v.total || 0) - (v.disponibles || 0) - (v.en_service || 0) - (v.maintenance || 0)), couleur: '#CBD5E1' },
             ]} />
           </div>
@@ -117,7 +117,7 @@ export default function TableauDeBord() {
         <section className="surface">
           <h2 className="mb-4 text-lg font-bold">{t('adm.tb.parEnergie')}</h2>
           <BarresHorizontales
-            couleur="#14C97E"
+            couleur="#3D3690"
             donnees={(tb.par_energie || []).map((e) => ({ libelle: nomEnergie(e.energie), valeur: e.km, info: t('adm.tb.coutEnergie', { cout: monnaie(e.cout_energie) }) }))}
             formatValeur={(n) => distance(n)}
           />

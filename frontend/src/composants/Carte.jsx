@@ -31,18 +31,18 @@ function epingle(couleur, lettre) {
     className: 'bfm-epingle',
     iconSize: [34, 44],
     iconAnchor: [17, 42],
-    html: `<svg width="34" height="44" viewBox="0 0 34 44"><path d="M17 43C17 43 3 26 3 16a14 14 0 0 1 28 0c0 10-14 27-14 27z" fill="${couleur}" stroke="#0B1F3A" stroke-width="2"/><text x="17" y="21" text-anchor="middle" font-family="Bricolage Grotesque,system-ui" font-weight="800" font-size="14" fill="#0B1F3A">${lettre}</text></svg>`,
+    html: `<svg width="34" height="44" viewBox="0 0 34 44"><path d="M17 43C17 43 3 26 3 16a14 14 0 0 1 28 0c0 10-14 27-14 27z" fill="${couleur}" stroke="#1A1650" stroke-width="2"/><text x="17" y="21" text-anchor="middle" font-family="Unbounded,system-ui" font-weight="800" font-size="14" fill="#1A1650">${lettre}</text></svg>`,
   })
 }
-const ICONE_DEPART = epingle('#2EE59D', 'A')
-const ICONE_ARRIVEE = epingle('#F5A524', 'B')
+const ICONE_DEPART = epingle('#FFC629', 'A')
+const ICONE_ARRIVEE = epingle('#E8336D', 'B')
 
 // Marqueur du chauffeur : voiture dans un rond bleu nuit + halo qui pulse
 const ICONE_CHAUFFEUR = L.divIcon({
   className: 'bfm-chauffeur',
   iconSize: [40, 40],
   iconAnchor: [20, 20],
-  html: `<span class="bfm-halo"></span><span class="bfm-voiture"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2EE59D" stroke-width="2" stroke-linecap="round"><path d="M5 16h14M6 16l1.5-5.5A2 2 0 0 1 9.4 9h5.2a2 2 0 0 1 1.9 1.5L18 16v3h-2v-1.5H8V19H6z"/></svg></span>`,
+  html: `<span class="bfm-halo"></span><span class="bfm-voiture"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FFC629" stroke-width="2" stroke-linecap="round"><path d="M5 16h14M6 16l1.5-5.5A2 2 0 0 1 9.4 9h5.2a2 2 0 0 1 1.9 1.5L18 16v3h-2v-1.5H8V19H6z"/></svg></span>`,
 })
 
 // Écoute des clics sur la carte
@@ -94,13 +94,13 @@ export default function Carte({ depart, arrivee, chauffeur, trace, onClic, centr
         {/* Itinéraire routier : trait plein vert bordé de bleu nuit (lisible sur tous les fonds) */}
         {itineraire.length > 1 && (
           <>
-            <Polyline positions={itineraire} pathOptions={{ color: '#0B1F3A', weight: 8, opacity: 0.85, lineCap: 'round', lineJoin: 'round' }} />
-            <Polyline positions={itineraire} pathOptions={{ color: '#2EE59D', weight: 4.5, lineCap: 'round', lineJoin: 'round' }} />
+            <Polyline positions={itineraire} pathOptions={{ color: '#1A1650', weight: 8, opacity: 0.85, lineCap: 'round', lineJoin: 'round' }} />
+            <Polyline positions={itineraire} pathOptions={{ color: '#FFC629', weight: 4.5, lineCap: 'round', lineJoin: 'round' }} />
           </>
         )}
         {/* Sans itinéraire : ligne pointillée départ → arrivée (indicative, à vol d'oiseau) */}
         {itineraire.length < 2 && valide(depart) && valide(arrivee) && (
-          <Polyline positions={[[depart.lat, depart.lng], [arrivee.lat, arrivee.lng]]} pathOptions={{ color: '#0B1F3A', weight: 4, dashArray: '2 10', lineCap: 'round' }} />
+          <Polyline positions={[[depart.lat, depart.lng], [arrivee.lat, arrivee.lng]]} pathOptions={{ color: '#1A1650', weight: 4, dashArray: '2 10', lineCap: 'round' }} />
         )}
         {valide(depart) && <Marker position={[depart.lat, depart.lng]} icon={ICONE_DEPART} />}
         {valide(arrivee) && <Marker position={[arrivee.lat, arrivee.lng]} icon={ICONE_ARRIVEE} />}

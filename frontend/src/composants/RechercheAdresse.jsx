@@ -4,7 +4,7 @@
 // et une recherche devenue inutile est annulée (règle d'usage de Nominatim).
 //   valeur   : {lat, lng, adresse} | null
 //   onChoix  : appelé avec {lat, lng, adresse}
-//   pastille : couleur de la pastille à gauche (vert départ, ambre arrivée)
+//   pastille : couleur de la pastille à gauche (jaune départ, fuchsia arrivée)
 // ============================================================================
 import { useEffect, useRef, useState } from 'react'
 import { chercherAdresse } from '@/lib/geo.js'
@@ -12,7 +12,7 @@ import { useLangue } from '@/i18n/index.jsx'
 import { useConfig } from '@/contexte/Config.jsx'
 import Jauge from './Jauge.jsx'
 
-export default function RechercheAdresse({ valeur, onChoix, placeholder, pastille = 'bg-volt-400', lettre = 'A', id }) {
+export default function RechercheAdresse({ valeur, onChoix, placeholder, pastille = 'bg-volt-400 text-nuit', lettre = 'A', id }) {
   const { langue } = useLangue()
   const { config } = useConfig()
   const [texte, setTexte] = useState(valeur?.adresse || '')
@@ -50,7 +50,7 @@ export default function RechercheAdresse({ valeur, onChoix, placeholder, pastill
     <div className="relative">
       <div className="flex items-center gap-3 rounded-2xl bg-white px-3 ring-1 ring-nuit/15 focus-within:ring-2 focus-within:ring-volt-500">
         {/* Pastille A / B */}
-        <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full font-display text-sm font-extrabold text-nuit ${pastille}`} aria-hidden="true">{lettre}</span>
+        <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full font-display text-sm font-extrabold ${pastille}`} aria-hidden="true">{lettre}</span>
         <input
           id={id}
           value={texte}

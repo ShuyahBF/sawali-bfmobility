@@ -12,6 +12,8 @@ import { useLangue } from '@/i18n/index.jsx'
 import Logo from './Logo.jsx'
 import SelecteurLangue from './SelecteurLangue.jsx'
 import Version from './Version.jsx'
+import SupportSawali from './SupportSawali.jsx'   // SAWALI lot 90 : assistance pour tout utilisateur connecté
+import api from '@/lib/api.js'
 
 // Drapeau emoji à partir du code pays ISO (« BF » → 🇧🇫)
 export function drapeau(code = '') {
@@ -46,6 +48,8 @@ export function EnTete({ sombre = false }) {
           <span className="hidden sm:inline-flex"><SelecteurLangue clair={sombre} /></span>
           {utilisateur ? (
             <>
+              {/* Pictogramme d'assistance : le client ou le chauffeur connecté écrit au support SAWALI à tout moment */}
+              <SupportSawali api={api} clair={sombre} libelle="" />
               {/* Nom de l'utilisateur = lien vers son profil */}
               <Link to="/profil" className={`hidden text-sm font-bold hover:underline sm:inline ${sombre ? 'text-white/80' : 'text-nuit'}`} title={t('nav.profil')}>{utilisateur.nom}</Link>
               <button type="button" onClick={() => { deconnexion(); naviguer('/') }} className={sombre ? 'rounded-xl px-3 py-2 text-sm font-bold text-white ring-1 ring-white/25 hover:bg-white/10' : 'btn-secondaire py-2 text-sm'}>

@@ -29,7 +29,7 @@ export function EnTete({ sombre = false }) {
     `rounded-lg px-3 py-2 text-sm font-bold transition ${sombre ? (isActive ? 'text-volt-400' : 'text-white/80 hover:text-white') : (isActive ? 'text-volt-700' : 'text-nuit/80 hover:text-nuit')}`
 
   return (
-    <header className={`no-print ${sombre ? 'bg-nuit' : 'bg-white/90 backdrop-blur ring-1 ring-nuit/5'} sticky top-0 z-[500]`}>
+    <header className={`no-print ${sombre ? 'bg-nuit/85 backdrop-blur-md' : 'bg-white/85 backdrop-blur-md ring-1 ring-nuit/5'} sticky top-0 z-[500]`}>
       <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-3">
         <Link to="/" aria-label="Accueil bfmobility" className="shrink-0"><Logo clair={sombre} /></Link>
         {/* Liens principaux (cachés sur mobile : barre d'onglets en bas) */}

@@ -238,10 +238,10 @@ export default function Commander() {
               {/* Adresses */}
               <div className="space-y-2">
                 <div onFocus={() => setPointActif('depart')}>
-                  <RechercheAdresse valeur={depart} onChoix={(p) => { setDepart(p); setPointActif('arrivee') }} placeholder={t('cmd.departPh')} lettre="A" pastille="bg-volt-400" />
+                  <RechercheAdresse valeur={depart} onChoix={(p) => { setDepart(p); setPointActif('arrivee') }} placeholder={t('cmd.departPh')} lettre="A" pastille="bg-volt-400 text-nuit" />
                 </div>
                 <div onFocus={() => setPointActif('arrivee')}>
-                  <RechercheAdresse valeur={arrivee} onChoix={setArrivee} placeholder={arriveeObligatoire ? t('cmd.arriveePh') : t('cmd.arriveeOpt')} lettre="B" pastille="bg-ambre-500" />
+                  <RechercheAdresse valeur={arrivee} onChoix={setArrivee} placeholder={arriveeObligatoire ? t('cmd.arriveePh') : t('cmd.arriveeOpt')} lettre="B" pastille="bg-ambre-500 text-white" />
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
                   <button type="button" onClick={prendrePosition} className="font-bold text-volt-700 hover:underline">◎ {t('cmd.maPosition')}</button>
@@ -301,7 +301,7 @@ export default function Commander() {
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="font-display text-lg font-bold">{c.nom}</span>
                             {(c.energies || []).map((en) => <BadgeEnergie key={en} energie={en} />)}
-                            {c.promo_active && <span className="rounded-full bg-ambre-500 px-2 py-0.5 text-xs font-bold text-nuit">−{c.promo?.pourcentage} %</span>}
+                            {c.promo_active && <span className="rounded-full bg-ambre-500 px-2 py-0.5 text-xs font-bold text-white">−{c.promo?.pourcentage} %</span>}
                           </div>
                           <p className="mt-0.5 text-sm text-ardoise">
                             {t('accueil.places', { n: c.places })}
@@ -355,7 +355,7 @@ export default function Commander() {
                   </details>
                 )}
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {estimation.majoration_nuit && <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-bold text-ambre-500">☾ {t('simu.nuit')}</span>}
+                  {estimation.majoration_nuit && <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-bold text-volt-400">☾ {t('simu.nuit')}</span>}
                   {cat?.energies?.includes('electrique') && <Co2 km={estimation.distance_km} />}
                   <BadgeDistance source={estimation.source_distance} />
                 </div>

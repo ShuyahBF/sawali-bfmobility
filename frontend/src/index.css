@@ -13,8 +13,10 @@
   body {
     @apply bg-brume font-sans text-nuit antialiased;
   }
-  h1, h2, h3 { @apply font-display; }
-  :focus-visible { @apply outline-none ring-2 ring-volt-500 ring-offset-2; }
+  h1, h2, h3 { @apply font-display tracking-tight; }
+  /* Titres larges : interlignage resserré (Unbounded est une police large) */
+  h1 { line-height: 1.04; }
+  :focus-visible { @apply outline-none ring-2 ring-nuit ring-offset-2; }
   /* Respect du réglage « réduire les animations » du système */
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
@@ -25,19 +27,19 @@
 @layer components {
   /* Champ de saisie standard */
   .champ {
-    @apply block w-full rounded-xl border-0 bg-white px-3 py-2.5 text-nuit ring-1 ring-nuit/15 placeholder:text-ardoise/60 focus:ring-2 focus:ring-volt-500;
+    @apply block w-full rounded-2xl border-0 bg-white px-4 py-3 text-nuit ring-1 ring-nuit/15 placeholder:text-ardoise/60 focus:ring-2 focus:ring-nuit;
   }
-  /* Bouton principal : vert électrique, texte bleu nuit */
+  /* Bouton principal : pilule jaune soleil, texte indigo */
   .btn-principal {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-volt-500 px-5 py-2.5 font-bold text-nuit transition hover:bg-volt-400 active:translate-y-px disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-volt-500 px-6 py-2.5 font-bold text-nuit shadow-[0_6px_0_-2px_#E0A800] transition hover:bg-volt-400 active:translate-y-0.5 active:shadow-none disabled:cursor-not-allowed disabled:opacity-50;
   }
   /* Bouton sombre (bleu nuit) */
   .btn-nuit {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-nuit px-5 py-2.5 font-bold text-white transition hover:bg-nuit-700 active:translate-y-px disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-nuit px-6 py-2.5 font-bold text-white transition hover:bg-nuit-700 active:translate-y-px disabled:opacity-50;
   }
   /* Bouton secondaire : contour discret */
   .btn-secondaire {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 font-bold text-nuit ring-1 ring-nuit/15 transition hover:bg-brume disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-white px-5 py-2.5 font-bold text-nuit ring-1 ring-nuit/20 transition hover:ring-nuit/50 disabled:opacity-50;
   }
   /* Petit lien d'action dans une ligne de tableau */
   .lien-action {
@@ -45,7 +47,7 @@
   }
   /* Surface blanche (bloc de contenu) */
   .surface {
-    @apply rounded-3xl bg-white p-5 ring-1 ring-nuit/10;
+    @apply rounded-[28px] bg-white p-5 ring-1 ring-nuit/[0.07] sm:p-6;
   }
   /* Tableau du back-office */
   .tableau { @apply w-full border-collapse text-sm; }
@@ -54,16 +56,27 @@
   .tableau tbody tr:last-child td { @apply border-b-0; }
 }
 
+/* --- Billet de course (simulateur de l'accueil) : bord perforé entre le trajet et la souche ---
+   Deux encoches rondes sur les côtés + pointillés : on « détache » la souche qui porte le prix. */
+.billet { position: relative; border-radius: 30px; }
+.billet-souche { position: relative; border-top: 2px dashed rgba(26, 22, 80, 0.35); }
+.billet-souche::before, .billet-souche::after {
+  content: ""; position: absolute; top: -14px; width: 26px; height: 26px; border-radius: 9999px;
+  background: #1A1650;   /* couleur du fond du héros : l'encoche « troue » le billet */
+}
+.billet-souche::before { left: -13px; }
+.billet-souche::after { right: -13px; }
+
 /* --- Marqueurs de la carte (voir composants/Carte.jsx) --- */
 .bfm-epingle { background: none; border: 0; }
 .bfm-chauffeur { background: none; border: 0; position: relative; }
 .bfm-chauffeur .bfm-voiture {
   position: absolute; inset: 2px; display: grid; place-items: center;
-  border-radius: 9999px; background: #0B1F3A; border: 2px solid #2EE59D;
-  box-shadow: 0 6px 16px rgba(11, 31, 58, 0.35);
+  border-radius: 9999px; background: #1A1650; border: 2px solid #FFC629;
+  box-shadow: 0 6px 16px rgba(26, 22, 80, 0.35);
 }
 .bfm-chauffeur .bfm-halo {
-  position: absolute; inset: 0; border-radius: 9999px; background: rgba(46, 229, 157, 0.45);
+  position: absolute; inset: 0; border-radius: 9999px; background: rgba(255, 198, 41, 0.5);
   animation: pouls 1.8s ease-out infinite;
 }
 @keyframes pouls { 0% { transform: scale(.6); opacity: .8 } 100% { transform: scale(2.4); opacity: 0 } }

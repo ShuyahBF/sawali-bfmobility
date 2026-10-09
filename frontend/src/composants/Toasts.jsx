@@ -75,7 +75,7 @@ export function ToastsProvider({ children }) {
             key={x.id}
             className={`pointer-events-auto flex max-w-md items-center gap-3 rounded-2xl border-l-4 px-4 py-3 text-sm shadow-lg shadow-nuit/10 animate-monte ${STYLES[x.type]}`}
           >
-            {x.type === 'attente' && <Jauge taille={22} epaisseur={3} couleur="#2EE59D" />}
+            {x.type === 'attente' && <Jauge taille={22} epaisseur={3} couleur="#FFC629" />}
             {x.type === 'succes' && <span aria-hidden="true" className="text-volt-600">✓</span>}
             {x.type === 'erreur' && <span aria-hidden="true" className="text-red-600">!</span>}
             <span className="flex-1">{x.texte}</span>

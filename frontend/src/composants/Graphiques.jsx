@@ -9,7 +9,7 @@ import { useState } from 'react'
 import { useLangue } from '@/i18n/index.jsx'
 
 // --- Histogramme vertical. donnees = [{libelle, valeur, info?}]
-export function Histogramme({ donnees = [], hauteur = 160, couleur = '#14C97E', formatValeur = (v) => v }) {
+export function Histogramme({ donnees = [], hauteur = 160, couleur = '#FFC629', formatValeur = (v) => v }) {
   const { t } = useLangue()
   const [survol, setSurvol] = useState(null)
   const max = Math.max(1, ...donnees.map((d) => Number(d.valeur) || 0))
@@ -24,7 +24,7 @@ export function Histogramme({ donnees = [], hauteur = 160, couleur = '#14C97E', 
     <div className="relative">
       <svg viewBox={`0 0 ${largeur} ${hauteur}`} className="w-full" role="img" aria-label={t('adm.tb.histogramme')}>
         {/* Ligne de base, discrète */}
-        <line x1="0" x2={largeur} y1={hauteur - marge.bas} y2={hauteur - marge.bas} stroke="#0B1F3A" strokeOpacity="0.12" />
+        <line x1="0" x2={largeur} y1={hauteur - marge.bas} y2={hauteur - marge.bas} stroke="#1A1650" strokeOpacity="0.12" />
         {donnees.map((d, i) => {
           const v = Number(d.valeur) || 0
           const h = Math.max(v ? 3 : 0, (v / max) * zone)
@@ -60,7 +60,7 @@ function barreArrondie(x, y, l, h, r) {
 }
 
 // --- Barres horizontales. donnees = [{libelle, valeur, info?}]
-export function BarresHorizontales({ donnees = [], couleur = '#0B1F3A', formatValeur = (v) => v }) {
+export function BarresHorizontales({ donnees = [], couleur = '#1A1650', formatValeur = (v) => v }) {
   const { t } = useLangue()
   const max = Math.max(1, ...donnees.map((d) => Number(d.valeur) || 0))
   if (!donnees.length) return <p className="text-sm text-ardoise">{t('adm.tb.pasDeDonnees')}</p>

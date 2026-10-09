@@ -40,6 +40,10 @@ RESSOURCES: Dict[str, Dict[str, Any]] = {
             # Lot 11 : taxe sur les véhicules à moteur (TVM), document délivré par les impôts
             "tvm_expire": ("date", False), "tvm_paye_le": ("date", False), "tvm_reference": ("str", False),
             "tvm_montant": ("float", False), "tvm_mode_paiement": ("enum:" + "|".join(MODES_PAIEMENT_TVM), False),
+            # Lot 12 : carte grise (certificat d'immatriculation)
+            "cg_numero": ("str", False), "cg_titulaire": ("str", False), "cg_date_delivrance": ("date", False),
+            "cg_premiere_circulation": ("date", False), "cg_chassis": ("str", False), "cg_puissance_fiscale": ("int", False),
+            "cg_genre": ("str", False), "cg_carrosserie": ("str", False),
             # Lot 11 : assureur et n° de police (l'assurance n'avait que sa date d'échéance)
             "assurance_compagnie": ("str", False), "assurance_police": ("str", False),
         },

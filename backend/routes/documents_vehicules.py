@@ -15,7 +15,7 @@ Pour un développeur WinDev :
   - une photo est réduite par le navigateur avant l'envoi ; un PDF est envoyé tel quel (4 Mo au plus).
 
 Routes :
-  GET    /api/admin/vehicules/{id}/documents                 état des 3 scans du véhicule
+  GET    /api/admin/vehicules/{id}/documents                 état des 4 scans du véhicule (carte grise : lot 12)
   PUT    /api/admin/vehicules/{id}/documents/{doc}           envoi / remplacement d'un scan (direction, exploitation)
   GET    /api/admin/vehicules/{id}/documents/{doc}/fichier   le fichier lui-même (personnel du parc)
   DELETE /api/admin/vehicules/{id}/documents/{doc}           suppression du scan
@@ -36,6 +36,7 @@ router = APIRouter(tags=["Documents des véhicules"])
 
 # Les 3 documents officiels d'un véhicule, dans l'ordre d'affichage
 DOCUMENTS: Dict[str, str] = {
+    "carte_grise": "Carte grise",   # lot 12
     "assurance": "Attestation d'assurance",
     "visite_technique": "Visite technique",
     "tvm": "Taxe sur les véhicules à moteur (TVM)",
@@ -52,7 +53,7 @@ def type_fichier(donnees: bytes) -> str:
 
 def document_ou_422(doc: str) -> str:
     if doc not in DOCUMENTS:
-        raise HTTPException(status_code=422, detail="Document inconnu (assurance, visite_technique ou tvm)")
+        raise HTTPException(status_code=422, detail="Document inconnu (carte_grise, assurance, visite_technique ou tvm)")
     return doc
 
 

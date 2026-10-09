@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 6,
+    date: '09/10/2026',
+    titre: 'Assistance : discussion avec le support SAWALI',
+    description: 'Petit pictogramme « Assistance » dans la barre latérale du back-office : une fenêtre de discussion avec le support SAWALI (requête numérotée, son à chaque réponse).',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 2,
     date: '09/10/2026',
     titre: 'Paiement en ligne, code WhatsApp, itinéraires et candidatures',

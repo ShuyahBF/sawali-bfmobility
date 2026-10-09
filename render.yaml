@@ -11,9 +11,9 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/health
-    # Domaine du serveur (sous-domaine de sawalismartsystems.com, DNS chez Cloudflare : CNAME → bfmobility-backend.onrender.com)
+    # Domaine du serveur : api.sawalismartsysems.com (DNS du domaine : CNAME api → bfmobility-backend.onrender.com)
     domains:
-      - api-bfmobility.sawalismartsystems.com
+      - api.sawalismartsysems.com
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.10
@@ -28,10 +28,10 @@ services:
       - key: JWT_SECRET
         generateValue: true
       # --- Sites autorisés (CORS) : la PREMIÈRE adresse sert aux liens (retours de paiement, messages) ---
-      # Étape 1 (09/10/2026) : domaine bfmobility.sawalismartsystems.com AUTORISÉ, adresse Render encore en premier ;
-      # étape 2, une fois le DNS Cloudflare vérifié : le domaine officiel passe en premier.
+      # Domaine de bfmobility : sawalismartsysems.com (et www). Étape 1 : domaine AUTORISÉ, adresse Render encore
+      # en premier ; étape 2, une fois le DNS vérifié : https://sawalismartsysems.com passe en premier.
       - key: FRONTEND_ORIGIN
-        value: https://bfmobility-frontend.onrender.com,https://bfmobility.sawalismartsystems.com
+        value: https://bfmobility-frontend.onrender.com,https://sawalismartsysems.com,https://www.sawalismartsysems.com
       # --- Premier administrateur (créé au premier démarrage) ---
       - key: ADMIN_EMAIL
         sync: false
@@ -85,15 +85,16 @@ services:
     rootDir: frontend
     buildCommand: npm install && npm run build
     staticPublishPath: dist
-    # Domaine du site (sous-domaine de sawalismartsystems.com, DNS chez Cloudflare : CNAME → bfmobility-frontend.onrender.com)
+    # Domaine du site : sawalismartsysems.com (A @ → 216.24.57.1) et www (CNAME www → bfmobility-frontend.onrender.com)
     domains:
-      - bfmobility.sawalismartsystems.com
+      - sawalismartsysems.com
+      - www.sawalismartsysems.com
     # Application monopage : toutes les adresses renvoient index.html
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
     envVars:
-      # Serveur appelé par le site. Étape 2 (après vérification du DNS) : https://api-bfmobility.sawalismartsystems.com
+      # Serveur appelé par le site. Étape 2 (après vérification du DNS) : https://api.sawalismartsysems.com
       - key: VITE_API_URL
         value: https://bfmobility-backend.onrender.com

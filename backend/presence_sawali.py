@@ -39,7 +39,7 @@ URL_PRESENCE = "https://api.sawalismartsystems.com/api/presence-logiciel"
 # Nom de l'application tel qu'il apparaît dans SAWALI
 APPLICATION = "sawali-bfmobility"
 # Domaine public de sawali-bfmobility (cf. FRONTEND_ORIGIN dans config.py)
-SITE = "bfmobility.sawalismartsystems.com"
+SITE = "sawalismartsysems.com"
 # Délai avant le premier envoi, puis intervalle entre deux signaux (secondes)
 DELAI_PREMIER_ENVOI = 10
 INTERVALLE = 5 * 60

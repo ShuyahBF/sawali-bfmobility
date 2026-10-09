@@ -175,7 +175,7 @@ export default function Parametres() {
                     </label>
                   ) : (
                     <>
-                      <label htmlFor={`p-${c.cle}`} className="mb-1 block text-sm font-bold">{t(`adm.param.${c.cle}`)}</label>
+                      <label htmlFor={`p-${c.cle}`} className="etiquette">{t(`adm.param.${c.cle}`)}</label>
                       {c.type === 'select' ? (
                         <select id={`p-${c.cle}`} value={valeurs[c.cle] ?? ''} onChange={(e) => setValeurs((v) => ({ ...v, [c.cle]: e.target.value }))} className="champ">
                           {c.options.map((o) => <option key={o.valeur} value={o.valeur}>{o.cle ? t(`adm.param.unite.${o.cle}`) : o.libelle}</option>)}

@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 10,
+    date: '09/10/2026',
+    titre: 'Fiches à onglets et formulaires plus lisibles',
+    description: 'Champs de saisie en bleu clair, libellés gris-bleu, fiches rangées par sections ; chaque fiche (véhicule, utilisateur, fournisseur…) a des onglets pour toute sa « vie » : énergie, dépannages, plans, courses, commandes, paiements.',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 9,
     date: '09/10/2026',
     titre: 'Photos des véhicules',

@@ -57,15 +57,15 @@ export default function Profil() {
         <p className="mt-1 text-ardoise">{utilisateur?.telephone}</p>
         <form onSubmit={enregistrer} className="surface mt-6 space-y-4">
           <div>
-            <label htmlFor="pf-nom" className="mb-1 block text-sm font-bold">{t('ins.nom')}</label>
+            <label htmlFor="pf-nom" className="etiquette">{t('ins.nom')}</label>
             <input id="pf-nom" value={champs.nom} onChange={maj('nom')} required minLength={2} autoComplete="name" className="champ" />
           </div>
           <div>
-            <label htmlFor="pf-email" className="mb-1 block text-sm font-bold">{t('ins.email')}</label>
+            <label htmlFor="pf-email" className="etiquette">{t('ins.email')}</label>
             <input id="pf-email" type="email" value={champs.email} onChange={maj('email')} autoComplete="email" className="champ" />
           </div>
           <div>
-            <label htmlFor="pf-langue" className="mb-1 block text-sm font-bold">{t('commun.langue')}</label>
+            <label htmlFor="pf-langue" className="etiquette">{t('commun.langue')}</label>
             <select id="pf-langue" value={champs.langue} onChange={maj('langue')} className="champ">
               {langues.map((l) => <option key={l.code} value={l.code}>{l.nom}</option>)}
             </select>

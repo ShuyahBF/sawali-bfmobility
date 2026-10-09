@@ -78,3 +78,23 @@ def test_photo_trop_lourde_refusee(c):
     v = vehicules[0] if isinstance(vehicules, list) else vehicules["lignes"][0]
     lourde = b"\xff\xd8\xff" + b"\x00" * (2 * 1024 * 1024 + 10)
     assert c.put(f"/api/admin/vehicules/{v['id']}/photos/face", headers=admin, json={"image": data_url(lourde)}).status_code == 413
+
+
+def test_filtres_des_listes_et_courses_par_vehicule(c):
+    """Lot 10 — ?champ=valeur filtre les listes (onglets des fiches) ; courses filtrées par véhicule."""
+    admin = connexion(c, "admin@test.bf", "admin-test-123")
+    vehicules = c.get("/api/admin/vehicules", headers=admin).json()
+    v = vehicules[0]
+    # Plein d'énergie sur ce véhicule seulement
+    r = c.post("/api/admin/energie", headers=admin, json={"vehicule_id": v["id"], "type": "recharge", "quantite": 30,
+                                                          "cout": 4500, "kilometrage": 1000})
+    assert r.status_code in (200, 201), r.text
+    pleins = c.get("/api/admin/energie", headers=admin, params={"vehicule_id": v["id"]}).json()
+    assert pleins and all(p["vehicule_id"] == v["id"] for p in pleins)
+    assert c.get("/api/admin/energie", headers=admin, params={"vehicule_id": "inconnu"}).json() == []
+    # Filtre par statut (liste de choix) ; un nombre n'est pas filtré
+    dispo = c.get("/api/admin/vehicules", headers=admin, params={"statut": "disponible"}).json()
+    assert all(x["statut"] == "disponible" for x in dispo)
+    assert len(c.get("/api/admin/vehicules", headers=admin, params={"places": "999"}).json()) == len(vehicules)
+    # Courses d'un véhicule
+    assert isinstance(c.get("/api/admin/courses", headers=admin, params={"vehicule_id": v["id"]}).json(), list)

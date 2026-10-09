@@ -26,8 +26,31 @@
 /* --- Composants réutilisables (classes courtes utilisées partout) --- */
 @layer components {
   /* Champ de saisie standard */
+  /* Lot 10 — champs de saisie en BLEU CLAIR (demande du propriétaire : « les champs de saisie sont noirs comme les
+     libellés, ça épuise la vue ») : fond bleu clair, texte indigo ; blanc avec contour bleu vif quand on écrit. */
   .champ {
-    @apply block w-full rounded-2xl border-0 bg-white px-4 py-3 text-nuit ring-1 ring-nuit/15 placeholder:text-ardoise/60 focus:ring-2 focus:ring-nuit;
+    @apply block w-full rounded-2xl border-0 bg-[#EAF4FF] px-4 py-3 font-medium text-nuit ring-1 ring-sky-200 placeholder:font-normal placeholder:text-ardoise/60 hover:ring-sky-300 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 disabled:bg-brume disabled:text-ardoise;
+  }
+  /* Libellé d'un champ : plus petit et gris-bleu, pour ne pas se confondre avec la valeur saisie */
+  .etiquette {
+    @apply mb-1 block text-xs font-semibold tracking-wide text-ardoise;
+  }
+  /* Lot 10 — cadre d'une section de formulaire (identification, technique, énergie, documents…) */
+  .cadre-section {
+    @apply rounded-2xl bg-brume/60 p-4 ring-1 ring-nuit/5;
+  }
+  .titre-section {
+    @apply mb-3 flex items-center gap-2 px-1 font-display text-sm font-bold text-nuit;
+  }
+  /* Lot 10 — onglets d'une fiche (la « vie » d'un véhicule, d'un fournisseur…) */
+  .onglets {
+    @apply -mx-1 mb-5 flex gap-1 overflow-x-auto border-b border-nuit/10 px-1;
+  }
+  .onglet {
+    @apply -mb-px inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 border-transparent px-3 py-2.5 text-sm font-semibold text-ardoise transition hover:text-nuit focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500;
+  }
+  .onglet-actif {
+    @apply border-volt-500 text-nuit;
   }
   /* Bouton principal : pilule jaune soleil, texte indigo */
   .btn-principal {

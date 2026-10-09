@@ -39,6 +39,36 @@ services:
         value: "1"
       - key: DEMO_MOT_DE_PASSE
         sync: false
+      # --- Lot 2 : paiement Mobile Money (pawaPay) ---
+      - key: PAWAPAY_ENVIRONMENT
+        value: sandbox
+      - key: PAWAPAY_API_TOKEN_SANDBOX
+        sync: false
+      - key: PAWAPAY_API_TOKEN_PRODUCTION
+        sync: false
+      - key: PAWAPAY_CALLBACK_SECRET
+        sync: false
+      # --- Lot 2 : paiement par carte (Stripe) ---
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      # --- Lot 2 : WhatsApp (codes de connexion, notifications) : WABA propre OU Transmission SAWALI ---
+      - key: WHATSAPP_ACCESS_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_OTP_TEMPLATE
+        sync: false
+      - key: LILUVINE_WA_URL
+        value: https://api.sawalismartsystems.com/api/webhook/liluvine-send
+      - key: LILUVINE_WA_HMAC
+        sync: false
+      - key: LILUVINE_WA_EMETTEUR
+        value: bfmobility
+      # --- Lot 2 : itinéraires routiers (serveur OSRM public par défaut) ---
+      - key: OSRM_URL
+        value: https://router.project-osrm.org
       # --- Présence auprès de SAWALI (règle 4) ---
       - key: LOOIS_SUPPORT_CLE
         sync: false

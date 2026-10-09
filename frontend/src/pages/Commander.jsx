@@ -5,6 +5,8 @@
 //   3. Confirmation : paiement, mot pour le chauffeur, validation (POST /courses)
 // Si le visiteur n'est pas connecté, la commande est gardée dans le navigateur
 // le temps de la connexion, puis reprise automatiquement.
+// Lot 2 : itinéraire routier sur la carte et, pour une location, paiement en
+// ligne (Mobile Money / carte) dès la confirmation.
 // ============================================================================
 import { useEffect, useMemo, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -13,6 +15,8 @@ import Carte from '@/composants/Carte.jsx'
 import RechercheAdresse from '@/composants/RechercheAdresse.jsx'
 import BadgeEnergie from '@/composants/BadgeEnergie.jsx'
 import Co2 from '@/composants/Co2.jsx'
+import BadgeDistance from '@/composants/BadgeDistance.jsx'
+import { payerEnLigne, useMoyensEnLigne } from '@/composants/PaiementEnLigne.jsx'
 import Jauge from '@/composants/Jauge.jsx'
 import { useToasts } from '@/composants/Toasts.jsx'
 import { useAuth } from '@/contexte/Auth.jsx'
@@ -97,6 +101,7 @@ export default function Commander() {
   const [estimations, setEstimations] = useState({})
   const [estimationEnCours, setEstimationEnCours] = useState(false)
   const [envoi, setEnvoi] = useState(false)
+  const moyensEnLigne = useMoyensEnLigne()
 
   const arriveeObligatoire = mode === 'course'
   // Durée envoyée au serveur, toujours en heures (1 jour = 24 h)
@@ -160,7 +165,8 @@ export default function Commander() {
   const cat = useMemo(() => categories.find((c) => c.code === categorie), [categories, categorie])
 
   // Étape 3 : confirmation (ou passage par la connexion)
-  const confirmer = async () => {
+  // moyenEnLigne = 'mobile_money' | 'carte' : location payée tout de suite en ligne
+  const confirmer = async (moyenEnLigne) => {
     if (!utilisateur) {
       // On garde tout le parcours, on revient ici après la connexion
       try {
@@ -177,13 +183,23 @@ export default function Commander() {
         categorie,
         depart: { lat: depart.lat, lng: depart.lng, adresse: depart.adresse },
         arrivee: arrivee ? { lat: arrivee.lat, lng: arrivee.lng, adresse: arrivee.adresse } : null,
-        paiement,
+        paiement: moyenEnLigne || paiement,
       }
       if (plusTard) corps.quand = new Date(quand).toISOString()
       if (dureeHeures) corps.duree_heures = dureeHeures
       if (note.trim()) corps.note_client = note.trim()
       const { data } = await toast.attente(api.post('/courses', corps))
       toast.succes(t('cmd.creee'))
+      if (moyenEnLigne) {
+        // Location payée en ligne : direction la page de l'opérateur. En cas
+        // d'échec, la course existe : on l'ouvre, le client pourra payer de là.
+        try {
+          await toast.attente(payerEnLigne(data.id, moyenEnLigne, utilisateur.telephone), t('pay.redirection'))
+          return
+        } catch (err) {
+          toast.erreur(messageErreur(err, err.message))
+        }
+      }
       naviguer(`/courses/${data.id}`, { replace: true })
     } catch (err) {
       toast.erreur(messageErreur(err))
@@ -341,6 +357,7 @@ export default function Commander() {
                 <div className="mt-3 flex flex-wrap gap-2">
                   {estimation.majoration_nuit && <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs font-bold text-ambre-500">☾ {t('simu.nuit')}</span>}
                   {cat?.energies?.includes('electrique') && <Co2 km={estimation.distance_km} />}
+                  <BadgeDistance source={estimation.source_distance} />
                 </div>
               </div>
 
@@ -366,10 +383,20 @@ export default function Commander() {
               {!utilisateur && <p className="rounded-xl bg-ambre-50 p-3 text-sm text-nuit">{t('cmd.connexionRequise')}</p>}
               <div className="flex gap-2">
                 <button type="button" onClick={() => setEtape(2)} className="btn-secondaire">{t('cmd.precedent')}</button>
-                <button type="button" disabled={envoi} onClick={confirmer} className="btn-principal flex-1 py-3 text-base">
+                <button type="button" disabled={envoi} onClick={() => confirmer()} className="btn-principal flex-1 py-3 text-base">
                   {utilisateur ? (plusTard ? t('cmd.confirmerResa') : t('cmd.confirmer')) : t('nav.connexion')}
                 </button>
               </div>
+              {/* Location : paiement en ligne immédiat, si l'opérateur est configuré */}
+              {utilisateur && mode !== 'course' && (moyensEnLigne.mobile_money || moyensEnLigne.carte) && (
+                <div className="rounded-2xl bg-white p-4 ring-1 ring-nuit/10">
+                  <p className="mb-2 text-sm text-ardoise">{t('pay.location')}</p>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {moyensEnLigne.mobile_money && <button type="button" disabled={envoi} onClick={() => confirmer('mobile_money')} className="btn-principal">{t('pay.mobileMoney')}</button>}
+                    {moyensEnLigne.carte && <button type="button" disabled={envoi} onClick={() => confirmer('carte')} className="btn-nuit">{t('pay.carte')}</button>}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -377,7 +404,7 @@ export default function Commander() {
         {/* ---------- Colonne droite : carte ---------- */}
         <div className="order-1 lg:order-2">
           <div className="lg:sticky lg:top-20">
-            <Carte depart={depart} arrivee={arrivee} onClic={etape === 1 ? surClicCarte : undefined} hauteur="h-64 sm:h-80 lg:h-[560px]" />
+            <Carte depart={depart} arrivee={arrivee} trace={etape > 1 ? estimation?.trace : null} onClic={etape === 1 ? surClicCarte : undefined} hauteur="h-64 sm:h-80 lg:h-[560px]" />
             {(depart || arrivee) && (
               <div className="mt-3 space-y-1 text-sm">
                 {depart && <p className="truncate"><b className="text-volt-700">A</b> {depart.adresse}</p>}

@@ -2,9 +2,11 @@
 // Suivi d'une course en direct (rafraîchi toutes les 5 s)
 //   carte (départ, arrivée, position du chauffeur), carte du chauffeur
 //   (appel tel:, messages), frise des statuts, paiement, note, reçu, annulation.
+// Lot 2 : itinéraire routier, paiement en ligne (Mobile Money / carte) avec
+// suivi du retour (?paiement=REF), bouton « Relancer la recherche ».
 // ============================================================================
 import { useCallback, useEffect, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 import PageSite from '@/composants/MiseEnPage.jsx'
 import Carte from '@/composants/Carte.jsx'
 import Messagerie from '@/composants/Messagerie.jsx'
@@ -13,6 +15,8 @@ import Co2 from '@/composants/Co2.jsx'
 import Jauge from '@/composants/Jauge.jsx'
 import Modale from '@/composants/Modale.jsx'
 import BadgeEnergie from '@/composants/BadgeEnergie.jsx'
+import BadgeDistance from '@/composants/BadgeDistance.jsx'
+import { BoutonsPaiement, SuiviPaiement, useMoyensEnLigne } from '@/composants/PaiementEnLigne.jsx'
 import { FriseStatuts, PastilleStatut } from '@/composants/StatutCourse.jsx'
 import { useToasts } from '@/composants/Toasts.jsx'
 import { useConfig } from '@/contexte/Config.jsx'
@@ -24,6 +28,14 @@ import { formatDateHeure, formatDuree } from '@/lib/format.js'
 const ACTIFS = ['planifiee', 'recherche', 'acceptee', 'en_approche', 'arrivee', 'en_cours']
 // Statuts où le client peut encore annuler
 const ANNULABLES = ['planifiee', 'recherche', 'acceptee', 'en_approche']
+// Délai avant de proposer « Relancer la recherche » (2 minutes)
+const DELAI_RELANCE_MS = 2 * 60 * 1000
+
+// Depuis quand la course est en « recherche » (dernier passage dans l'historique)
+function debutRecherche(course) {
+  const h = [...(course.historique || [])].reverse().find((x) => x.statut === 'recherche')
+  return h ? new Date(h.le).getTime() : new Date(course.cree_le).getTime()
+}
 
 export default function SuiviCourse() {
   const { id } = useParams()
@@ -37,6 +49,16 @@ export default function SuiviCourse() {
   const [telMobile, setTelMobile] = useState('')
   const [note, setNote] = useState(0)
   const [commentaire, setCommentaire] = useState('')
+  // Retour de la page de paiement : ?paiement=REF ou ?paiement=annule
+  const [params] = useSearchParams()
+  const retourPaiement = params.get('paiement')
+  const moyensEnLigne = useMoyensEnLigne()
+  // Heure actuelle, mise à jour toutes les 15 s (pour le bouton « Relancer »)
+  const [maintenant, setMaintenant] = useState(() => Date.now())
+  useEffect(() => {
+    const m = setInterval(() => setMaintenant(Date.now()), 15000)
+    return () => clearInterval(m)
+  }, [])
 
   // Lecture de la course
   const charger = useCallback(async () => {
@@ -83,7 +105,13 @@ export default function SuiviCourse() {
   const c = course
   const prix = c.prix_final ?? c.prix_estime
   const electrique = c.vehicule?.energie === 'electrique'
-  const peutPayer = c.paiement?.statut !== 'paye' && c.paiement?.moyen !== 'especes' && c.statut !== 'annulee'
+  // Paiement en ligne possible : course terminée (prix définitif) ou location dès la commande
+  const payable = c.paiement?.statut !== 'paye' && c.statut !== 'annulee' && (c.statut === 'terminee' || c.mode !== 'course')
+  const enLigne = payable && (moyensEnLigne.mobile_money || moyensEnLigne.carte)
+  // Ancien enregistrement manuel (sans opérateur) : seulement si aucun paiement en ligne n'est configuré
+  const peutPayer = payable && !enLigne && c.paiement?.moyen !== 'especes'
+  // « Relancer la recherche » : en recherche depuis plus de 2 minutes
+  const peutRelancer = c.statut === 'recherche' && maintenant - debutRecherche(c) > DELAI_RELANCE_MS
 
   return (
     <PageSite sansPied>
@@ -94,10 +122,18 @@ export default function SuiviCourse() {
             <h1 className="text-2xl font-bold">{t('suivi.titre', { numero: c.numero })}</h1>
             <PastilleStatut statut={c.statut} />
           </div>
-          <Carte depart={c.depart} arrivee={c.arrivee} chauffeur={c.chauffeur?.position} hauteur="h-72 sm:h-96 lg:h-[520px]" />
+          {/* Bandeau de retour du paiement en ligne */}
+          {retourPaiement && <div className="mb-3"><SuiviPaiement reference={retourPaiement} onFini={charger} /></div>}
+          <Carte depart={c.depart} arrivee={c.arrivee} chauffeur={c.chauffeur?.position} trace={c.trace} hauteur="h-72 sm:h-96 lg:h-[520px]" />
           {vivante && <p className="mt-2 flex items-center gap-2 text-xs text-ardoise"><span className="h-1.5 w-1.5 animate-pulse rounded-full bg-volt-500" />{t('suivi.majAuto')}</p>}
           {c.statut === 'recherche' && (
-            <div className="mt-4 flex items-center gap-3 rounded-2xl bg-ambre-50 p-4"><Jauge taille={28} couleur="#D9860A" /><p className="text-sm font-bold">{t('suivi.attente')}</p></div>
+            <div className="mt-4 rounded-2xl bg-ambre-50 p-4">
+              <div className="flex items-center gap-3"><Jauge taille={28} couleur="#D9860A" /><p className="text-sm font-bold">{t('suivi.attente')}</p></div>
+              {/* Personne n'a accepté depuis 2 min : on élargit la recherche */}
+              {peutRelancer && (
+                <button type="button" onClick={() => agir('relancer', undefined, t('suivi.relancee'))} className="btn-nuit mt-3 w-full">{t('suivi.relancer')}</button>
+              )}
+            </div>
           )}
         </div>
 
@@ -150,8 +186,19 @@ export default function SuiviCourse() {
                 <p className={`font-bold ${c.paiement?.statut === 'paye' ? 'text-volt-700' : 'text-ambre-600'}`}>{t(`paiement.${c.paiement?.statut || 'non_paye'}`)}</p>
               </div>
             </div>
-            {electrique && c.distance_km > 0 && <Co2 km={c.distance_km} />}
+            <div className="flex flex-wrap gap-2">
+              {c.distance_km > 0 && <BadgeDistance source={c.trace?.length > 1 ? 'route' : 'estimation'} />}
+              {electrique && c.distance_km > 0 && <Co2 km={c.distance_km} />}
+            </div>
           </section>
+
+          {/* Paiement en ligne (Mobile Money / carte) */}
+          {enLigne && (
+            <section className="surface">
+              <h2 className="mb-3 font-bold">{t('pay.titre')}</h2>
+              <BoutonsPaiement course={c} />
+            </section>
+          )}
 
           {/* Actions */}
           <div className="flex flex-wrap gap-2">

@@ -97,6 +97,14 @@ RESSOURCES: Dict[str, Dict[str, Any]] = {
         "champs": {"fournisseur_id": ("str", True), "commande_id": ("str", False), "montant": ("float", True),
                    "moyen": ("str", True), "reference": ("str", False), "le": ("date", False)},
     },
+    # Lot 2 — candidatures « Devenez chauffeur » (déposées sur le site public)
+    "candidatures": {
+        "collection": "candidatures", "lecture": EQUIPE, "ecriture": EQUIPE, "tri": "-cree_le", "recherche": ["nom", "telephone", "ville"],
+        "champs": {"nom": ("str", True), "telephone": ("str", True), "ville": ("str", False), "experience_annees": ("int", False),
+                   "permis_numero": ("str", False), "vehicule_personnel": ("str", False), "message": ("str", False),
+                   "statut": ("enum:nouvelle|contactee|acceptee|refusee", False), "note_interne": ("str", False)},
+        "defauts": {"statut": "nouvelle"},
+    },
     "utilisateurs": {
         "collection": "utilisateurs", "lecture": EQUIPE, "ecriture": EQUIPE, "tri": "nom", "recherche": ["nom", "telephone", "email"],
         "champs": {"nom": ("str", True), "telephone": ("str", True), "email": ("str", False),
@@ -397,6 +405,8 @@ async def affecter(course_id: str, corps: Dict[str, Any] = Body(...), u: dict = 
         "vehicule": {k: vehicule.get(k) for k in ("id", "marque", "modele", "couleur", "immatriculation", "energie")},
     }, "$push": {"historique": {"statut": "acceptee", "le": iso(), "par": u.get("nom")}}})
     await db.vehicules.update_one({"id": vehicule["id"]}, {"$set": {"statut": "en_service"}})
+    from notifications import notifier_client
+    notifier_client("acceptee", await charger_course(course_id), await parametres())
     return await voir_course(course_id, u)
 
 

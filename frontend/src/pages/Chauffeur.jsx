@@ -4,6 +4,8 @@
 //     navigateur est envoyée toutes les 15 s (POST /chauffeur/position)
 //   - courses proposées (Accepter), course en cours avec boutons d'étapes
 //   - appel / messages au client, saisie d'une recharge ou d'un plein
+//   - lot 2 : « Refuser » une course proposée, « Me désister » d'une course
+//     acceptée (avant le départ, avec motif), itinéraire routier sur la carte
 // ============================================================================
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
@@ -25,6 +27,9 @@ import { formatDateHeure, formatDuree } from '@/lib/format.js'
 // Étape suivante d'une course selon son statut actuel
 const SUIVANTE = { acceptee: 'en_approche', en_approche: 'arrivee', arrivee: 'en_cours', en_cours: 'terminee' }
 
+// Statuts où le chauffeur peut encore se désister (avant de démarrer la course)
+const DESISTABLES = ['acceptee', 'en_approche', 'arrivee']
+
 // Lien d'itinéraire OpenStreetMap entre deux points
 const itineraire = (a, b) => (a && b ? `https://www.openstreetmap.org/directions?route=${a.lat},${a.lng};${b.lat},${b.lng}` : null)
 
@@ -38,7 +43,8 @@ export default function Chauffeur() {
   const [donnees, setDonnees] = useState({ proposees: [], en_cours: null, recentes: [] })
   const [kmReel, setKmReel] = useState('')
   const [encaisse, setEncaisse] = useState(false)
-  const [fenetre, setFenetre] = useState(null) // 'messages' | 'energie'
+  const [fenetre, setFenetre] = useState(null) // 'messages' | 'energie' | 'desister'
+  const [motif, setMotif] = useState('')
   const [energie, setEnergie] = useState({ type: 'recharge', quantite: '', cout: '', kilometrage: '', station: '' })
   const dejaCharge = useRef(false)
 
@@ -106,6 +112,32 @@ export default function Chauffeur() {
     } catch (err) {
       toast.erreur(messageErreur(err))
       charger()
+    }
+  }
+
+  // --- Refuser une course proposée : elle disparaît de mes propositions
+  const refuser = async (course) => {
+    try {
+      await toast.attente(api.post(`/courses/${course.id}/refuser`))
+      // Retrait immédiat de la liste, sans attendre le prochain rafraîchissement
+      setDonnees((d) => ({ ...d, proposees: d.proposees.filter((x) => x.id !== course.id) }))
+      toast.info(`${course.numero} : ${t('chf.refusee')}`)
+    } catch (err) {
+      toast.erreur(messageErreur(err))
+    }
+  }
+
+  // --- Me désister de la course acceptée : elle repart en recherche
+  const desister = async (e) => {
+    e.preventDefault()
+    try {
+      await toast.attente(api.post(`/courses/${enCours.id}/liberer`, { motif: motif.trim() || undefined }))
+      toast.info(t('chf.desiste'))
+      setFenetre(null)
+      setMotif('')
+      charger()
+    } catch (err) {
+      toast.erreur(messageErreur(err))
     }
   }
 
@@ -181,7 +213,7 @@ export default function Chauffeur() {
         {/* ---------- Course en cours ---------- */}
         {enCours && (
           <section className="overflow-hidden rounded-3xl bg-white ring-1 ring-nuit/10">
-            <Carte depart={enCours.depart} arrivee={enCours.arrivee} chauffeur={position} hauteur="h-56" className="!rounded-none ring-0" />
+            <Carte depart={enCours.depart} arrivee={enCours.arrivee} chauffeur={position} trace={enCours.trace} hauteur="h-56" className="!rounded-none ring-0" />
             <div className="space-y-3 p-4">
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-lg font-bold">{t('chf.enCours')} {enCours.numero}</h2>
@@ -223,6 +255,10 @@ export default function Chauffeur() {
                   {t(`chf.etape.${SUIVANTE[enCours.statut]}`)}
                 </button>
               )}
+              {/* Désistement possible tant que la course n'a pas démarré */}
+              {DESISTABLES.includes(enCours.statut) && (
+                <button type="button" onClick={() => setFenetre('desister')} className="w-full py-2 text-sm font-bold text-red-600 underline">{t('chf.desister')}</button>
+              )}
             </div>
           </section>
         )}
@@ -247,7 +283,10 @@ export default function Chauffeur() {
                     {t(`cmd.mode.${c.mode}`)}{c.distance_km ? ` — ${distance(c.distance_km)}` : ''}{c.duree_min ? ` — ${formatDuree(c.duree_min)}` : ''}
                     {c.quand ? ` — ${formatDateHeure(c.quand, langue)}` : ''}
                   </p>
-                  <button type="button" onClick={() => accepter(c)} className="btn-principal mt-3 w-full py-3">{t('chf.accepter')}</button>
+                  <div className="mt-3 grid grid-cols-[1fr_2fr] gap-2">
+                    <button type="button" onClick={() => refuser(c)} className="btn-secondaire py-3">{t('chf.refuser')}</button>
+                    <button type="button" onClick={() => accepter(c)} className="btn-principal py-3">{t('chf.accepter')}</button>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -281,7 +320,11 @@ export default function Chauffeur() {
         {/* ---------- Pied : compte + version ---------- */}
         <footer className="flex flex-col items-center gap-2 pt-4 text-center">
           <p className="text-sm text-ardoise">{utilisateur?.nom}{utilisateur?.chauffeur?.note_moyenne != null && ` — ★ ${Number(utilisateur.chauffeur.note_moyenne).toFixed(1)}`}</p>
-          <button type="button" onClick={deconnexion} className="text-sm font-bold text-nuit-600 underline">{t('nav.deconnexion')}</button>
+          <div className="flex gap-4">
+            <Link to="/profil" className="text-sm font-bold text-nuit-600 underline">{t('nav.profil')}</Link>
+            <button type="button" onClick={deconnexion} className="text-sm font-bold text-nuit-600 underline">{t('nav.deconnexion')}</button>
+          </div>
+          <p className="max-w-xs text-xs text-ardoise">{t('secu.note')}</p>
           <Version />
         </footer>
       </main>
@@ -289,6 +332,17 @@ export default function Chauffeur() {
       {/* Fenêtres */}
       <Modale titre={t('suivi.messages')} ouverte={fenetre === 'messages' && Boolean(enCours)} onFermer={() => setFenetre(null)}>
         {enCours && <Messagerie courseId={enCours.id} />}
+      </Modale>
+      <Modale titre={t('chf.desister')} ouverte={fenetre === 'desister' && Boolean(enCours)} onFermer={() => setFenetre(null)}>
+        <form onSubmit={desister} className="space-y-3">
+          <p className="text-sm text-ardoise">{t('chf.desisterAide')}</p>
+          <label htmlFor="motif-desist" className="block text-sm font-bold">{t('suivi.motif')}</label>
+          <input id="motif-desist" value={motif} onChange={(e) => setMotif(e.target.value)} className="champ" maxLength={200} />
+          <div className="flex justify-end gap-2">
+            <button type="button" onClick={() => setFenetre(null)} className="btn-secondaire">{t('commun.retour')}</button>
+            <button type="submit" className="rounded-xl bg-red-600 px-5 py-2.5 font-bold text-white">{t('chf.desister')}</button>
+          </div>
+        </form>
       </Modale>
       <Modale titre={t('chf.energie')} ouverte={fenetre === 'energie'} onFermer={() => setFenetre(null)}>
         <form onSubmit={enregistrerEnergie} className="space-y-3">

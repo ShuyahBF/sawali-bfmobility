@@ -225,4 +225,92 @@ export default {
 
   // --- Pied de page
   'pied.droits': 'Tous droits réservés.',
+
+  // ===== Lot 2 =====
+  'nav.profil': 'Mon profil',
+
+  // --- Origine de la distance
+  'dist.route': 'par la route',
+  'dist.estimation': 'estimation',
+  'dist.routeAide': 'Distance calculée sur le réseau routier.',
+  'dist.estimationAide': 'Distance estimée à vol d’oiseau, corrigée.',
+
+  // --- Paiement en ligne
+  'pay.titre': 'Payer en ligne',
+  'pay.mobileMoney': 'Payer par Mobile Money',
+  'pay.carte': 'Payer par carte',
+  'pay.location': 'Réglez votre location maintenant, en ligne :',
+  'pay.redirection': 'Ouverture de la page de paiement…',
+  'pay.verification': 'Paiement en cours de vérification…',
+  'pay.reussi': 'Paiement reçu. Merci !',
+  'pay.echec': 'Le paiement n’a pas abouti. Vous pouvez réessayer.',
+  'pay.incoherent': 'Montant payé différent du prix : le service client va vérifier.',
+  'pay.annule': 'Paiement annulé.',
+  'pay.long': 'La confirmation prend plus de temps que prévu : elle s’affichera dès réception.',
+
+  // --- Connexion par code WhatsApp
+  'otp.ongletMdp': 'Mot de passe',
+  'otp.ongletCode': 'Code WhatsApp',
+  'otp.aide': 'Nous vous envoyons un code à 6 chiffres sur WhatsApp (ou par SMS).',
+  'otp.recevoir': 'Recevoir le code',
+  'otp.envoyeWhatsapp': 'Code envoyé sur WhatsApp, valable {n} min, au',
+  'otp.envoyeSms': 'Code envoyé par SMS, valable {n} min, au',
+  'otp.code': 'Code reçu (6 chiffres)',
+  'otp.nom': 'Votre nom',
+  'otp.nouveauCompte': 'Premier passage : votre compte est créé avec ce nom.',
+  'otp.renvoyer': 'Renvoyer le code',
+  'otp.renvoyerDans': 'Renvoyer le code dans {s} s',
+  'otp.changerNumero': 'Changer de numéro',
+  'otp.format': 'Le code compte 6 chiffres.',
+  'otp.nomRequis': 'Indiquez votre nom pour créer votre compte.',
+  'otp.trop': 'Trop de demandes : patientez une minute avant de redemander un code.',
+  'otp.invalide': 'Code incorrect ou expiré. Vérifiez-le ou demandez-en un nouveau.',
+  'otp.indisponible': 'L’envoi de codes est momentanément indisponible. Utilisez votre mot de passe.',
+
+  // --- Actions de course
+  'suivi.relancer': 'Relancer la recherche',
+  'suivi.relancee': 'Recherche relancée, sur une zone plus large.',
+  'chf.refuser': 'Refuser',
+  'chf.refusee': 'course refusée',
+  'chf.desister': 'Me désister',
+  'chf.desisterAide': 'La course repart en recherche d’un autre chauffeur et le client est prévenu.',
+  'chf.desiste': 'Vous vous êtes désisté : la course est proposée à d’autres chauffeurs.',
+
+  // --- Reçu
+  'recu.operateur': 'opérateur',
+
+  // --- Candidature chauffeur
+  'cand.titre': 'Devenez chauffeur bfmobility',
+  'cand.av1': 'Un véhicule électrique, hybride ou thermique entretenu par nos mécaniciens.',
+  'cand.av2': 'Les courses arrivent sur votre téléphone, vous acceptez celles qui vous conviennent.',
+  'cand.av3': 'Vos courses et vos revenus suivis au jour le jour.',
+  'cand.ville': 'Ville',
+  'cand.experience': 'Années de conduite professionnelle',
+  'cand.permis': 'N° de permis',
+  'cand.vehicule': 'Véhicule personnel (facultatif)',
+  'cand.vehiculePh': 'Ex. : Toyota Corolla hybride 2021',
+  'cand.message': 'Un mot sur vous (facultatif)',
+  'cand.envoyer': 'Envoyer ma candidature',
+  'cand.merci': 'Candidature envoyée. Merci !',
+  'cand.rappel': 'Notre équipe vous appelle dans les prochains jours.',
+
+  // --- Profil
+  'profil.titre': 'Mon profil',
+  'profil.nouveauMdp': 'Nouveau mot de passe',
+  'profil.mdpVide': 'Laisser vide pour garder l’actuel',
+  'profil.confirmation': 'Confirmer le nouveau mot de passe',
+  'profil.mdpDifferents': 'Les deux mots de passe ne sont pas identiques.',
+  'profil.rienAChanger': 'Aucune modification à enregistrer.',
+  'profil.enregistre': 'Profil enregistré.',
+
+  // --- Sécurité de l'interface
+  'secu.capture': 'Les captures d’écran ne sont pas autorisées sur ce site.',
+  'secu.masque': 'Contenu masqué. Revenez sur la page pour l’afficher.',
+  'secu.note': 'Un site ne peut pas empêcher une capture faite par le système ou le téléphone.',
+
+  // --- Connexion (erreur) et page introuvable
+  'cnx.erreur': 'Identifiant ou mot de passe incorrect.',
+  'nt.titre': 'Cette page n’existe pas.',
+  'nt.texte': 'Vérifiez l’adresse ou repartez de l’accueil.',
+  'nt.retour': 'Retour à l’accueil',
 }

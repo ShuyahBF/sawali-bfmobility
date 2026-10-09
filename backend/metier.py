@@ -46,6 +46,10 @@ PARAMETRES_DEFAUT: Dict[str, Any] = {
     "majoration_nuit_pct": 20.0, "nuit_debut": 22, "nuit_fin": 6,
     "commission_pct": 20.0,          # part de la plateforme sur chaque course (pour les statistiques)
     "telephone_support": "", "email_support": "",
+    # Lot 2
+    "itineraire_routier": True,        # distance et durée par la route (OSRM) plutôt qu'à vol d'oiseau
+    "notifications_whatsapp": True,    # messages WhatsApp au client (chauffeur en route, arrivé, reçu…)
+    "rayon_recherche_km": 25.0,        # rayon de proposition des courses aux chauffeurs (élargi à la relance)
 }
 
 ENERGIES = ("electrique", "hybride", "thermique")

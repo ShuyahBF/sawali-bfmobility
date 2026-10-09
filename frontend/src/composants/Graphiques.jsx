@@ -6,9 +6,11 @@
 // Chaque barre affiche une bulle d'information au survol (ou au toucher).
 // ============================================================================
 import { useState } from 'react'
+import { useLangue } from '@/i18n/index.jsx'
 
 // --- Histogramme vertical. donnees = [{libelle, valeur, info?}]
 export function Histogramme({ donnees = [], hauteur = 160, couleur = '#14C97E', formatValeur = (v) => v }) {
+  const { t } = useLangue()
   const [survol, setSurvol] = useState(null)
   const max = Math.max(1, ...donnees.map((d) => Number(d.valeur) || 0))
   const largeur = 320
@@ -17,10 +19,10 @@ export function Histogramme({ donnees = [], hauteur = 160, couleur = '#14C97E', 
   const pas = largeur / Math.max(1, donnees.length)
   const epaisseur = Math.min(28, pas * 0.6)
 
-  if (!donnees.length) return <p className="text-sm text-ardoise">Pas encore de données.</p>
+  if (!donnees.length) return <p className="text-sm text-ardoise">{t('adm.tb.pasDeDonnees')}</p>
   return (
     <div className="relative">
-      <svg viewBox={`0 0 ${largeur} ${hauteur}`} className="w-full" role="img" aria-label="Histogramme">
+      <svg viewBox={`0 0 ${largeur} ${hauteur}`} className="w-full" role="img" aria-label={t('adm.tb.histogramme')}>
         {/* Ligne de base, discrète */}
         <line x1="0" x2={largeur} y1={hauteur - marge.bas} y2={hauteur - marge.bas} stroke="#0B1F3A" strokeOpacity="0.12" />
         {donnees.map((d, i) => {
@@ -59,8 +61,9 @@ function barreArrondie(x, y, l, h, r) {
 
 // --- Barres horizontales. donnees = [{libelle, valeur, info?}]
 export function BarresHorizontales({ donnees = [], couleur = '#0B1F3A', formatValeur = (v) => v }) {
+  const { t } = useLangue()
   const max = Math.max(1, ...donnees.map((d) => Number(d.valeur) || 0))
-  if (!donnees.length) return <p className="text-sm text-ardoise">Pas encore de données.</p>
+  if (!donnees.length) return <p className="text-sm text-ardoise">{t('adm.tb.pasDeDonnees')}</p>
   return (
     <ul className="space-y-3">
       {donnees.map((d) => (

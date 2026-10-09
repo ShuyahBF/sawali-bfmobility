@@ -20,6 +20,9 @@ const CONFIG_DEFAUT = {
   telephone_support: '',
   email_support: '',
   pays_disponibles: [],
+  // Lot 2 : moyens de paiement en ligne configurés sur le serveur et connexion par code
+  paiements_en_ligne: { mobile_money: false, carte: false, especes: true },
+  connexion_par_code: false,
 }
 
 const ContexteConfig = createContext(null)

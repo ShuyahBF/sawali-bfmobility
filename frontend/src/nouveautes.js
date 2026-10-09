@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 2,
+    date: '09/10/2026',
+    titre: 'Paiement en ligne, code WhatsApp, itinéraires et candidatures',
+    description: 'Mobile Money et carte, connexion par code WhatsApp, trajets routiers sur la carte, notifications WhatsApp et formulaire « Devenez chauffeur ».',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 1,
     date: '09/10/2026',
     titre: 'Lancement de bfmobility',

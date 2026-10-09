@@ -28,10 +28,10 @@ services:
       - key: JWT_SECRET
         generateValue: true
       # --- Sites autorisés (CORS) : la PREMIÈRE adresse sert aux liens (retours de paiement, messages) ---
-      # Domaine de bfmobility : sawalismartsysems.com (et www). Étape 1 : domaine AUTORISÉ, adresse Render encore
-      # en premier ; étape 2, une fois le DNS vérifié : https://sawalismartsysems.com passe en premier.
+      # Domaine de bfmobility : sawalismartsysems.com (DNS vérifié le 09/10/2026) — adresse principale, en premier.
+      # www et l'adresse Render restent autorisés (www renvoie vers le domaine principal).
       - key: FRONTEND_ORIGIN
-        value: https://bfmobility-frontend.onrender.com,https://sawalismartsysems.com,https://www.sawalismartsysems.com
+        value: https://sawalismartsysems.com,https://www.sawalismartsysems.com,https://bfmobility-frontend.onrender.com
       # --- Premier administrateur (créé au premier démarrage) ---
       - key: ADMIN_EMAIL
         sync: false
@@ -95,6 +95,6 @@ services:
         source: /*
         destination: /index.html
     envVars:
-      # Serveur appelé par le site. Étape 2 (après vérification du DNS) : https://api.sawalismartsysems.com
+      # Serveur appelé par le site : sous-domaine api du domaine bfmobility (CNAME → bfmobility-backend)
       - key: VITE_API_URL
-        value: https://bfmobility-backend.onrender.com
+        value: https://api.sawalismartsysems.com

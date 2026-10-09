@@ -53,6 +53,8 @@ PARAMETRES_DEFAUT: Dict[str, Any] = {
 }
 
 ENERGIES = ("electrique", "hybride", "thermique")
+# Lot 11 : modes de paiement de la TVM (taxe sur les véhicules à moteur)
+MODES_PAIEMENT_TVM = ("especes", "mobile_money", "virement", "cheque", "carte")
 STATUTS_COURSE = ("planifiee", "recherche", "acceptee", "en_approche", "arrivee", "en_cours", "terminee", "annulee")
 # Ordre des étapes que le chauffeur fait avancer
 ETAPES_CHAUFFEUR = {"acceptee": "en_approche", "en_approche": "arrivee", "arrivee": "en_cours", "en_cours": "terminee"}
@@ -228,10 +230,11 @@ def etat_plan(plan: Dict[str, Any], kilometrage_actuel: float, aujourd_hui: Opti
 
 
 def alertes_document(vehicule: Dict[str, Any], aujourd_hui: Optional[datetime] = None) -> List[Dict[str, Any]]:
-    """Assurance et contrôle technique : expiré (urgent) ou expirant dans 30 jours (attention)."""
+    """Assurance, visite technique et TVM (lot 11) : expiré (urgent) ou expirant dans 30 jours (attention)."""
     aujourd_hui = aujourd_hui or maintenant()
     alertes = []
-    for champ, libelle in (("assurance_expire", "Assurance"), ("controle_technique_expire", "Contrôle technique")):
+    for champ, libelle in (("assurance_expire", "Assurance"), ("controle_technique_expire", "Visite technique"),
+                           ("tvm_expire", "TVM")):
         d = lire_date(vehicule.get(champ))
         if not d:
             continue

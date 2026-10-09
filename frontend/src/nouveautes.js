@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 11,
+    date: '09/10/2026',
+    titre: 'Visite technique, TVM et documents scannés',
+    description: 'Fiche véhicule : cadres Assurance, Visite technique et TVM (référence de la transaction, montant, type de paiement, échéance), alerte d\'échéance TVM, et onglet « Documents scannés » pour stocker les scans (PDF ou photo).',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 10,
     date: '09/10/2026',
     titre: 'Fiches à onglets et formulaires plus lisibles',

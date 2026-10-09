@@ -44,7 +44,8 @@
   }
   /* Lot 10 — onglets d'une fiche (la « vie » d'un véhicule, d'un fournisseur…) */
   .onglets {
-    @apply -mx-1 mb-5 flex gap-1 overflow-x-auto border-b border-nuit/10 px-1;
+    /* Lot 11 : les onglets passent à la ligne au lieu de défiler (aucun onglet caché hors de la vue) */
+    @apply -mx-1 mb-5 flex flex-wrap gap-x-1 border-b border-nuit/10 px-1;
   }
   .onglet {
     @apply -mb-px inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 border-transparent px-3 py-2.5 text-sm font-semibold text-ardoise transition hover:text-nuit focus-visible:outline focus-visible:outline-2 focus-visible:outline-sky-500;

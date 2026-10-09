@@ -18,6 +18,8 @@
 //                 ou, pour une saisie (lot 2) : [{ libelle, visible?, formulaire: {
 //                   titre(ligne), champs:[…comme ci-dessus], defaut?(ligne),
 //                   envoyer(ligne, valeurs, outils) } }] → ouvre une modale
+//                 ou, pour un panneau libre (lot 9) : [{ libelle, visible?, panneau: {
+//                   titre(ligne), rendu(ligne, { fermer, recharger }) } }] → ouvre une modale large
 //   filtres     : [{ cle, libelle, options:[{valeur, libelle}] }] → ?cle=valeur
 //   ecriture    : false → lecture seule (pas de création/modification/suppression)
 //   suppression : false → pas de bouton Supprimer
@@ -83,6 +85,7 @@ export default function TableauCrud({ config }) {
   const [lignes, setLignes] = useState([])
   // Formulaire d'une action particulière (ex. mouvement de stock) : { action, ligne, valeurs }
   const [saisieAction, setSaisieAction] = useState(null)
+  const [panneauAction, setPanneauAction] = useState(null)   // lot 9 : { action, ligne } d'une action à panneau libre
   const [charge, setCharge] = useState(false)
   const [recherche, setRecherche] = useState('')
   const [valeursFiltres, setValeursFiltres] = useState({})
@@ -187,6 +190,8 @@ export default function TableauCrud({ config }) {
 
   // --- Action particulière (ex. « Recevoir » une commande)
   const lancerAction = async (action, ligne) => {
+    // Lot 9 — action à panneau libre (ex. « 📷 Photos » d'un véhicule)
+    if (action.panneau) { setPanneauAction({ action, ligne }); return }
     // Action avec saisie : on ouvre sa modale
     if (action.formulaire) {
       let valeurs = {}
@@ -308,6 +313,14 @@ export default function TableauCrud({ config }) {
             </div>
           </form>
         )}
+      </Modale>
+
+      {/* Lot 9 — modale d'une action à panneau libre (ex. photos d'un véhicule) */}
+      <Modale titre={panneauAction ? panneauAction.action.panneau.titre(panneauAction.ligne) : ''} ouverte={Boolean(panneauAction)}
+              onFermer={() => { setPanneauAction(null); charger(true) }} large>
+        {panneauAction && panneauAction.action.panneau.rendu(panneauAction.ligne, {
+          fermer: () => { setPanneauAction(null); charger(true) }, recharger: () => charger(true),
+        })}
       </Modale>
 
       {/* Modale d'une action avec saisie (ex. mouvement de stock) */}

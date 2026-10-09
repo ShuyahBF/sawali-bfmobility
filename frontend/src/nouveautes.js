@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 9,
+    date: '09/10/2026',
+    titre: 'Photos des véhicules',
+    description: '4 photos par véhicule (face, cabine avant, cabine arrière, coffre) chargées depuis le back-office ; sur le site, les clients les regardent, zooment et reviennent à leur choix.',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 8,
     date: '09/10/2026',
     titre: 'Nouveau style du site',

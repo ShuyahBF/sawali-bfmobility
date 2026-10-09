@@ -24,6 +24,7 @@ import { useConfig } from '@/contexte/Config.jsx'
 import { useLangue } from '@/i18n/index.jsx'
 import api, { messageErreur } from '@/lib/api.js'
 import { adresseDuPoint, maPosition } from '@/lib/geo.js'
+import GalerieVehicules from '@/composants/GalerieVehicules.jsx'   // lot 9 : photos des véhicules
 import { formatDuree } from '@/lib/format.js'
 
 // Clé du brouillon de commande (gardé pendant la connexion)
@@ -95,6 +96,7 @@ export default function Commander() {
   const [arrivee, setArrivee] = useState(initial.arrivee || null)
   const [pointActif, setPointActif] = useState(initial.depart ? 'arrivee' : 'depart')
   const [categorie, setCategorie] = useState(initial.categorie || '')
+  const [galerie, setGalerie] = useState(null)   // lot 9 : catégorie dont on regarde les photos
   const [paiement, setPaiement] = useState(initial.paiement || 'especes')
   const [note, setNote] = useState(initial.note || '')
   // Estimations par catégorie : { code: estimation | {erreur} }
@@ -316,10 +318,13 @@ export default function Commander() {
                           </div>
                         )}
                       </button>
+                      {/* Lot 9 — voir les photos des véhicules de la catégorie, puis revenir au choix */}
+                      <button type="button" onClick={() => setGalerie(c)} className="lien-action ml-4 mt-1 text-sm">📷 {t('photos.voir')}</button>
                     </li>
                   )
                 })}
               </ul>
+              <GalerieVehicules categorie={galerie} ouverte={Boolean(galerie)} onFermer={() => setGalerie(null)} />
               <div className="mt-5 flex gap-2">
                 <button type="button" onClick={() => setEtape(1)} className="btn-secondaire">{t('cmd.precedent')}</button>
                 <button type="button" disabled={!estimation || estimation.erreur} onClick={() => setEtape(3)} className="btn-principal flex-1 py-3">{t('cmd.suivant')}</button>

@@ -6,6 +6,7 @@
 // Tous les textes passent par t('adm.…') (traductions dans src/i18n/admin/).
 // ============================================================================
 import BadgeEnergie from '@/composants/BadgeEnergie.jsx'
+import PhotosVehicule from '@/composants/PhotosVehicule.jsx'   // lot 9 : 4 photos par véhicule
 import { formatDate, formatDateHeure } from '@/lib/format.js'
 
 // --- Listes de choix : valeurs de l'API ; le libellé est traduit (clé adm.opt.<valeur>)
@@ -81,12 +82,21 @@ export function configRessource(nom, { role, categories = [], monnaie = (n) => n
         refs: refs('utilisateurs'),
         filtres: [{ cle: 'statut', libelle: c('statut'), options: opts('statutsVehicule') }],
         defaut: { statut: 'disponible', energie: 'electrique', places: 4, kilometrage: 0, confort: [] },
+        // Lot 9 — 4 photos par véhicule (face, cabine avant, cabine arrière, coffre), visibles sur le portail public
+        actions: [{
+          libelle: t('photos.admin.action'),
+          panneau: {
+            titre: (l) => t('photos.admin.titre', { vehicule: `${l.marque || ''} ${l.modele || ''} — ${l.immatriculation || ''}` }),
+            rendu: (l) => <PhotosVehicule vehicule={l} peutModifier={direction} />,
+          },
+        }],
         colonnes: [
           { cle: 'immatriculation', libelle: c('immatriculation'), rendu: (l) => <span className="font-mono font-bold">{l.immatriculation}</span> },
           { cle: 'modele', libelle: c('vehicule'), rendu: (l) => `${l.marque || ''} ${l.modele || ''}${l.annee ? ` (${l.annee})` : ''}` },
           { cle: 'energie', libelle: c('energie'), rendu: (l) => <BadgeEnergie energie={l.energie} /> },
           { cle: 'categorie', libelle: c('categorie'), rendu: (l) => libelleCategorie(l.categorie) },
           { cle: 'kilometrage', libelle: c('km'), classe: 'text-right tabular-nums', rendu: (l) => Number(l.kilometrage || 0).toLocaleString(langue) },
+          { cle: 'photos', libelle: t('photos.admin.colonne'), classe: 'text-center tabular-nums', rendu: (l) => `${Object.keys(l.photos || {}).length} / 4` },
           {
             cle: 'statut', libelle: c('statut'),
             rendu: (l) => <Pastille texte={libelleOpt(l.statut)} ton={{ disponible: 'vert', en_service: 'nuit', maintenance: 'ambre', hors_service: 'rouge' }[l.statut]} />,
@@ -113,7 +123,6 @@ export function configRessource(nom, { role, categories = [], monnaie = (n) => n
           { cle: 'chauffeur_id', libelle: c('chauffeurAttitre'), type: 'ref', ref: 'utilisateurs' },
           { cle: 'assurance_expire', libelle: c('assuranceJusquau'), type: 'date' },
           { cle: 'controle_technique_expire', libelle: c('controleJusquau'), type: 'date' },
-          { cle: 'photo_url', libelle: c('photo'), large: true },
         ],
       }
 

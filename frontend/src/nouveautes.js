@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 22,
+    date: '10/10/2026',
+    titre: 'Capture d\'écran dans la fenêtre d\'assistance',
+    description: 'Nouveau pictogramme « Capture d\'écran » au-dessus de la saisie : l\'utilisateur choisit l\'écran ou la fenêtre à montrer, l\'image part au support SAWALI (ordinateur seulement).',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 21,
     date: '10/10/2026',
     titre: 'Retour à l\'accueil dans la carte de connexion',

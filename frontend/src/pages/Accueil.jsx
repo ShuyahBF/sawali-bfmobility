@@ -2,7 +2,7 @@
 // Page d'accueil (vitrine) : héros + simulateur de prix, catégories et tarifs,
 // location avec chauffeur, avantages, « Devenez chauffeur ».
 // ============================================================================
-import { useEffect, useState } from 'react'   // lot 9 : ouverture de la galerie ; lot 16 : retour sur « #tarifs »
+import { useCallback, useEffect, useRef, useState } from 'react'   // lot 9 : ouverture de la galerie ; lot 16 : retour sur « #tarifs »
 import { Link, useLocation } from 'react-router-dom'
 import PageSite from '@/composants/MiseEnPage.jsx'
 import Simulateur from '@/composants/Simulateur.jsx'
@@ -128,43 +128,108 @@ function LigneCategorie({ cat }) {
   )
 }
 
-// Lot 19 — galerie « Nos véhicules » façon vitrine (modèle fourni par le propriétaire) : une carte par véhicule,
-// grande photo, nom centré, puis deux liens « Découvrir » (page du véhicule) et « Commander » (dans sa classe).
+// Lot 19 / lot 23 — « Nos véhicules » en CARROUSEL (modèle fourni par le propriétaire, 10/10/2026) :
+// une grande diapositive par véhicule (photo plein cadre, nom, classe, prix au km, boutons « Commander » et
+// « Découvrir »), les diapositives voisines dépassent sur les côtés, des POINTS en dessous pour passer de l'une à
+// l'autre. Défilement au doigt / à la souris (accrochage CSS), flèches, et avance automatique toutes les 6 s
+// (arrêtée au survol, au toucher ou si l'utilisateur préfère réduire les animations).
 // La section n'apparaît que si au moins un véhicule a une photo.
 function NosVehicules() {
   const { t } = useLangue()
+  const { categories, monnaie } = useConfig()
   const [vehicules, setVehicules] = useState([])
+  const [actif, setActif] = useState(0)          // diapositive affichée (point noir)
+  const [pause, setPause] = useState(false)      // avance automatique suspendue (survol, toucher)
+  const piste = useRef(null)
+
   useEffect(() => {
     api.get('/public/vehicules').then((r) => setVehicules(r.data || [])).catch(() => setVehicules([]))
   }, [])
+
+  // Aller à la diapositive i (défilement doux, centré)
+  const aller = useCallback((i) => {
+    const el = piste.current?.children[i]
+    if (el) piste.current.scrollTo({ left: el.offsetLeft - (piste.current.clientWidth - el.clientWidth) / 2, behavior: 'smooth' })
+  }, [])
+
+  // Point actif = diapositive la plus proche du centre après un défilement
+  const surDefilement = () => {
+    const p = piste.current
+    if (!p) return
+    const centre = p.scrollLeft + p.clientWidth / 2
+    let meilleur = 0, ecart = Infinity
+    Array.from(p.children).forEach((el, i) => {
+      const d = Math.abs(el.offsetLeft + el.clientWidth / 2 - centre)
+      if (d < ecart) { ecart = d; meilleur = i }
+    })
+    setActif(meilleur)
+  }
+
+  // Avance automatique (sauf animations réduites, pause, ou un seul véhicule)
+  useEffect(() => {
+    const reduit = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    if (reduit || pause || vehicules.length < 2) return undefined
+    const minuteur = setInterval(() => aller((actif + 1) % vehicules.length), 6000)
+    return () => clearInterval(minuteur)
+  }, [actif, pause, vehicules.length, aller])
+
   if (vehicules.length === 0) return null
+  const prixKm = (code) => categories.find((c) => c.code === code)?.prix_km
+  const fleche = 'absolute top-1/2 z-10 hidden h-11 w-11 -translate-y-1/2 place-items-center rounded-full bg-white/90 text-xl font-bold text-nuit shadow-lg transition hover:bg-white md:grid'
   return (
-    <section id="vehicules" className="mx-auto max-w-6xl scroll-mt-20 px-4 pt-20">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <section id="vehicules" className="scroll-mt-20 pt-20">
+      <div className="mx-auto flex max-w-6xl flex-wrap items-end justify-between gap-3 px-4">
         <h2 className="text-3xl font-bold sm:text-[2.6rem]">{t('vitrine.titre')}</h2>
         {/* Lot 20 — comparaison des fiches techniques */}
         {vehicules.length > 1 && <Link to="/comparer" className="text-sm text-nuit/80 underline underline-offset-4 hover:text-nuit">{t('fiche.comparer')}</Link>}
       </div>
-      <ul className="mt-10 grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
-        {vehicules.map((v) => (
-          <li key={v.id} className="group text-center">
-            {/* Photo : cliquable vers la page du véhicule */}
-            <Link to={`/vehicule/${v.id}`} className="block overflow-hidden rounded-3xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-nuit" tabIndex={-1} aria-hidden="true">
-              <img src={urlImage(v.photo_url)} alt="" loading="lazy"
-                   className="aspect-[16/10] w-full object-cover transition duration-500 group-hover:scale-[1.04] motion-reduce:transition-none" />
-            </Link>
-            <h3 className="mt-5 text-xl font-bold">{v.nom}</h3>
-            <p className="mt-0.5 text-sm text-ardoise">
-              {t('vehicule.classe', { classe: v.classe })}{v.disponible ? ` · ${t('photos.disponible')}` : ''}
-            </p>
-            {/* Deux liens soulignés, comme sur le modèle */}
-            <div className="mt-2 flex justify-center gap-6 text-sm">
-              <Link to={`/vehicule/${v.id}`} className="text-nuit/80 underline underline-offset-4 hover:text-nuit">{t('vitrine.decouvrir')}</Link>
-              <Link to="/commander" state={{ categorie: v.categorie }} className="text-nuit/80 underline underline-offset-4 hover:text-nuit">{t('vitrine.commander')}</Link>
-            </div>
-          </li>
-        ))}
-      </ul>
+
+      <div className="relative mt-8" onMouseEnter={() => setPause(true)} onMouseLeave={() => setPause(false)}
+           onTouchStart={() => setPause(true)}>
+        {/* Piste : défilement horizontal avec accrochage au centre ; les voisines dépassent sur les côtés */}
+        <ul ref={piste} onScroll={surDefilement} aria-roledescription="carrousel" aria-label={t('vitrine.titre')}
+            className="relative flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-[6vw] pb-2 [scrollbar-width:none] md:gap-6 md:px-[11vw] [&::-webkit-scrollbar]:hidden">
+          {vehicules.map((v, i) => (
+            <li key={v.id} aria-roledescription="diapositive" aria-label={`${i + 1} / ${vehicules.length} — ${v.nom}`}
+                className="relative w-[88vw] shrink-0 snap-center overflow-hidden rounded-2xl md:w-[78vw] lg:w-[min(78vw,1100px)]">
+              <img src={urlImage(v.photo_url)} alt={v.nom} loading={i === 0 ? 'eager' : 'lazy'}
+                   className="aspect-[4/5] w-full object-cover sm:aspect-[16/10] lg:aspect-[16/8]" />
+              {/* Voile dégradé : lisibilité du texte posé sur la photo */}
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-black/30" aria-hidden="true" />
+              {/* Classe en haut à gauche, comme sur le modèle */}
+              <p className="absolute left-5 top-5 text-lg font-bold text-white drop-shadow sm:left-8 sm:top-7">{v.classe}</p>
+              {/* Nom, prix, boutons en bas à gauche */}
+              <div className="absolute bottom-6 left-5 right-5 text-white sm:bottom-8 sm:left-8">
+                <h3 className="font-display text-3xl font-extrabold leading-tight drop-shadow sm:text-5xl">{v.nom}</h3>
+                {prixKm(v.categorie) != null && (
+                  <p className="mt-1 text-base underline underline-offset-4 sm:text-lg">{t('vitrine.aPartirDe', { prix: monnaie(prixKm(v.categorie)) })}</p>
+                )}
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <Link to="/commander" state={{ categorie: v.categorie }} className="btn-principal min-w-[150px] justify-center">{t('vitrine.commander')}</Link>
+                  <Link to={`/vehicule/${v.id}`} className="inline-flex min-w-[150px] items-center justify-center rounded-full bg-white px-5 py-2.5 font-bold text-nuit transition hover:bg-white/90">{t('vitrine.decouvrir')}</Link>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+        {/* Flèches (ordinateur) */}
+        {vehicules.length > 1 && (
+          <>
+            <button type="button" onClick={() => aller((actif - 1 + vehicules.length) % vehicules.length)} className={`${fleche} left-3`} aria-label={t('photos.precedente')}>‹</button>
+            <button type="button" onClick={() => aller((actif + 1) % vehicules.length)} className={`${fleche} right-3`} aria-label={t('photos.suivante')}>›</button>
+          </>
+        )}
+      </div>
+
+      {/* Points : un par véhicule, le point noir = diapositive affichée */}
+      {vehicules.length > 1 && (
+        <div className="mt-5 flex justify-center gap-2.5">
+          {vehicules.map((v, i) => (
+            <button key={v.id} type="button" onClick={() => aller(i)} aria-label={v.nom} aria-current={i === actif}
+                    className={`h-2.5 w-2.5 rounded-full transition ${i === actif ? 'bg-nuit' : 'bg-nuit/30 hover:bg-nuit/50'}`} />
+          ))}
+        </div>
+      )}
     </section>
   )
 }

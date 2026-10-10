@@ -347,6 +347,7 @@ export default {
   "vitrine.titre": "Nos véhicules",
   "vitrine.decouvrir": "Découvrir",
   "vitrine.commander": "Commander",
+  "vitrine.aPartirDe": "À partir de {prix} / km",   // lot 23 : prix sur la diapositive
   // --- Lot 20 : fiche technique et comparaison des véhicules
   "fiche.titre": "Fiche technique",
   "fiche.comparer": "Comparer les véhicules",

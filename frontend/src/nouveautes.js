@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 23,
+    date: '10/10/2026',
+    titre: 'Carrousel « Nos véhicules » sur l\'accueil',
+    description: 'Les véhicules défilent en grandes photos (nom, classe, prix au km, boutons « Commander » et « Découvrir »), avec des points pour passer de l\'un à l\'autre et une avance automatique.',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 22,
     date: '10/10/2026',
     titre: 'Capture d\'écran dans la fenêtre d\'assistance',

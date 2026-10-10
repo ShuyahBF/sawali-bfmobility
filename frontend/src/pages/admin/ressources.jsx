@@ -102,6 +102,7 @@ export function configRessource(nom, contexte = {}) {
         // Lot 10 — fiche claire : sections + onglets de la « vie » du véhicule
         sections: [section('identite', '🚗'), section('technique', '⚙️'), section('exploitation', '🧭'),
                    // Lot 11 : un cadre par document officiel (assurance, visite technique, TVM)
+                   section('ficheTechnique', '📋'),   // lot 20 : fiche technique affichée sur la page publique
                    section('carteGrise', '🪪'), section('assurance', '🛡️'), section('visite', '🔍'), section('tvm', '🧾')],
         titreFiche: (l) => `${l.marque || ''} ${l.modele || ''} — ${l.immatriculation || ''}`,
         onglets: [
@@ -153,6 +154,17 @@ export function configRessource(nom, contexte = {}) {
           { cle: 'capacite_batterie_kwh', section: 'technique', libelle: c('batterie'), type: 'nombre', visible: (f) => f.energie !== 'thermique' },
           { cle: 'reservoir_l', section: 'technique', libelle: c('reservoir'), type: 'nombre', visible: (f) => f.energie !== 'electrique' },
           { cle: 'kilometrage', section: 'technique', libelle: c('kilometrage'), type: 'nombre' },
+          // Lot 20 — fiche technique publique (listes : un équipement par élément, séparés par des virgules)
+          { cle: 'interieur', section: 'ficheTechnique', libelle: c('interieur'), type: 'liste', aide: t('adm.aide.interieur'), large: true },
+          { cle: 'sieges', section: 'ficheTechnique', libelle: c('sieges'), type: 'liste', aide: t('adm.aide.sieges'), large: true },
+          { cle: 'ecran_pouces', section: 'ficheTechnique', libelle: c('ecranPouces'), type: 'nombre' },
+          { cle: 'ecran', section: 'ficheTechnique', libelle: c('ecran') },
+          { cle: 'audio_hp', section: 'ficheTechnique', libelle: c('audioHp'), type: 'nombre' },
+          { cle: 'boite', section: 'ficheTechnique', libelle: c('boite'), type: 'select',
+            options: [{ valeur: 'manuelle', libelle: t('adm.opt.manuelle') }, { valeur: 'automatique', libelle: t('adm.opt.automatique') }] },
+          { cle: 'puissance_ch', section: 'ficheTechnique', libelle: c('puissance'), type: 'nombre' },
+          { cle: 'climatisation', section: 'ficheTechnique', libelle: c('climatisation'), type: 'liste', aide: t('adm.aide.climatisation'), large: true },
+          { cle: 'securite', section: 'ficheTechnique', libelle: c('securite'), type: 'liste', aide: t('adm.aide.securite'), large: true },
           { cle: 'statut', section: 'exploitation', libelle: c('statut'), type: 'select', options: opts('statutsVehicule') },
           { cle: 'chauffeur_id', section: 'exploitation', libelle: c('chauffeurAttitre'), type: 'ref', ref: 'utilisateurs' },
           // Lot 12 : carte grise (certificat d'immatriculation) — l'immatriculation reste dans « Identification »

@@ -161,7 +161,10 @@ async def vehicules_de_la_categorie(code: str):
 
 # Lot 16 — « les photos des véhicules à côté des tarifs ; un lien ou pictogramme ouvre la page du véhicule (photos,
 # description, classe…) ». Jamais d'immatriculation, de chauffeur ni de document administratif côté public.
-APERCU_MAX = 3      # vignettes au plus par catégorie dans le tableau des tarifs
+APERCU_MAX = 3
+# Lot 20 — champs publics de la fiche technique (jamais l'immatriculation, la carte grise ni les documents)
+CHAMPS_TECHNIQUES = ("interieur", "sieges", "ecran_pouces", "ecran", "audio_hp", "climatisation", "securite", "boite",
+                     "puissance_ch", "capacite_batterie_kwh", "reservoir_l")      # vignettes au plus par catégorie dans le tableau des tarifs
 
 
 def fiche_publique(v: Dict[str, Any]) -> Dict[str, Any]:
@@ -172,6 +175,8 @@ def fiche_publique(v: Dict[str, Any]) -> Dict[str, Any]:
         "confort": v.get("confort") or [], "autonomie_km": v.get("autonomie_km"), "description": v.get("description") or "",
         "categorie": v.get("categorie") or "", "disponible": v.get("statut") == "disponible",
         "photos": vues_publiques(v.get("photos") or {}),
+        # Lot 20 — fiche technique (sections Intérieur, Sièges, Écran, Audio, Climatisation, Énergie, Sécurité)
+        "technique": {k: v.get(k) for k in CHAMPS_TECHNIQUES},
     }
 
 

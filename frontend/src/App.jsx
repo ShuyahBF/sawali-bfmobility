@@ -22,6 +22,7 @@ import ProtectionEcran from '@/composants/ProtectionEcran.jsx'
 // connectés ne sont téléchargés qu'à la première visite (accueil plus rapide)
 const Commander = lazy(() => import('@/pages/Commander.jsx'))
 const Vehicule = lazy(() => import('@/pages/Vehicule.jsx'))   // lot 16 : page publique d'un véhicule
+const Comparer = lazy(() => import('@/pages/Comparer.jsx'))   // lot 20 : comparaison des véhicules
 const MesCourses = lazy(() => import('@/pages/MesCourses.jsx'))
 const SuiviCourse = lazy(() => import('@/pages/SuiviCourse.jsx'))
 const Recu = lazy(() => import('@/pages/Recu.jsx'))
@@ -78,6 +79,8 @@ export default function App() {
         <Route path="/commander" element={<Commander />} />
         {/* Lot 16 : page publique d'un véhicule (ouverte depuis les vignettes du tableau des tarifs) */}
         <Route path="/vehicule/:id" element={<Vehicule />} />
+        {/* Lot 20 : comparaison de 3 véhicules au plus (fiche technique côte à côte) */}
+        <Route path="/comparer" element={<Comparer />} />
         <Route path="/devenir-chauffeur" element={<DevenirChauffeur />} />
         <Route path="/profil" element={<RouteProtegee><Profil /></RouteProtegee>} />
 

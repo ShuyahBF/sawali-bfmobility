@@ -313,6 +313,7 @@ export default {
   'nt.titre': 'Cette page n’existe pas.',
   'nt.texte': 'Vérifiez l’adresse ou repartez de l’accueil.',
   'nt.retour': 'Retour à l’accueil',
+  'cnx.retourSite': 'Retour au site',   // lot 17 : lien de retour au site sur Connexion / Inscription
 
   // --- Lot 9 : photos des véhicules (back-office et portail public)
   "photos.voir": "Voir les véhicules",

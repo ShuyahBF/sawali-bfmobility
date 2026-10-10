@@ -276,6 +276,7 @@ export default {
   'nt.titre': 'Esta página no existe.',
   'nt.texte': 'Revise la dirección o vuelva al inicio.',
   'nt.retour': 'Volver al inicio',
+  'cnx.retourSite': 'Volver al sitio',   // lot 17 : lien de retour au site sur Connexion / Inscription
 
   // --- Lot 9 : photos des véhicules (back-office et portail public)
   "photos.voir": "Ver los vehículos",

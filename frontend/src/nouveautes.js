@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 17,
+    date: '10/10/2026',
+    titre: 'Retour au site depuis la connexion',
+    description: 'Les pages Connexion et Inscription affichent en haut à gauche un lien « ← Retour au site » vers le site public.',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 16,
     date: '10/10/2026',
     titre: 'Photos des véhicules à côté des tarifs',

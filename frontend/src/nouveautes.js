@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 19,
+    date: '10/10/2026',
+    titre: 'Galerie « Nos véhicules » sur l\'accueil',
+    description: 'L\'accueil présente chaque véhicule photographié en grand, avec son nom et deux liens : « Découvrir » (page du véhicule) et « Commander ».',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 17,
     date: '10/10/2026',
     titre: 'Retour au site depuis la connexion',

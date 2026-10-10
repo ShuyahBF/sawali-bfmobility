@@ -8,6 +8,7 @@ import PageSite from '@/composants/MiseEnPage.jsx'
 import Simulateur from '@/composants/Simulateur.jsx'
 import BadgeEnergie from '@/composants/BadgeEnergie.jsx'
 import { useConfig } from '@/contexte/Config.jsx'
+import api from '@/lib/api.js'   // lot 19 : galerie « Nos véhicules »
 import GalerieVehicules from '@/composants/GalerieVehicules.jsx'   // lot 9 : photos des véhicules
 import { urlImage } from '@/composants/PhotosVehicule.jsx'          // lot 16 : vignettes à côté des tarifs
 import { useLangue } from '@/i18n/index.jsx'
@@ -127,6 +128,43 @@ function LigneCategorie({ cat }) {
   )
 }
 
+// Lot 19 — galerie « Nos véhicules » façon vitrine (modèle fourni par le propriétaire) : une carte par véhicule,
+// grande photo, nom centré, puis deux liens « Découvrir » (page du véhicule) et « Commander » (dans sa classe).
+// La section n'apparaît que si au moins un véhicule a une photo.
+function NosVehicules() {
+  const { t } = useLangue()
+  const [vehicules, setVehicules] = useState([])
+  useEffect(() => {
+    api.get('/public/vehicules').then((r) => setVehicules(r.data || [])).catch(() => setVehicules([]))
+  }, [])
+  if (vehicules.length === 0) return null
+  return (
+    <section id="vehicules" className="mx-auto max-w-6xl scroll-mt-20 px-4 pt-20">
+      <h2 className="text-3xl font-bold sm:text-[2.6rem]">{t('vitrine.titre')}</h2>
+      <ul className="mt-10 grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+        {vehicules.map((v) => (
+          <li key={v.id} className="group text-center">
+            {/* Photo : cliquable vers la page du véhicule */}
+            <Link to={`/vehicule/${v.id}`} className="block overflow-hidden rounded-3xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-nuit" tabIndex={-1} aria-hidden="true">
+              <img src={urlImage(v.photo_url)} alt="" loading="lazy"
+                   className="aspect-[16/10] w-full object-cover transition duration-500 group-hover:scale-[1.04] motion-reduce:transition-none" />
+            </Link>
+            <h3 className="mt-5 text-xl font-bold">{v.nom}</h3>
+            <p className="mt-0.5 text-sm text-ardoise">
+              {t('vehicule.classe', { classe: v.classe })}{v.disponible ? ` · ${t('photos.disponible')}` : ''}
+            </p>
+            {/* Deux liens soulignés, comme sur le modèle */}
+            <div className="mt-2 flex justify-center gap-6 text-sm">
+              <Link to={`/vehicule/${v.id}`} className="text-nuit/80 underline underline-offset-4 hover:text-nuit">{t('vitrine.decouvrir')}</Link>
+              <Link to="/commander" state={{ categorie: v.categorie }} className="text-nuit/80 underline underline-offset-4 hover:text-nuit">{t('vitrine.commander')}</Link>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
 // Icônes simples des avantages
 const ICONES = {
   prix: <path d="M4 7h16v10H4zM8 12h.01M16 12h.01M12 9.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z" />,
@@ -173,6 +211,9 @@ export default function Accueil() {
           <Simulateur />
         </div>
       </section>
+
+      {/* ---------- Lot 19 : Nos véhicules (vitrine) ---------- */}
+      <NosVehicules />
 
       {/* ---------- Catégories et tarifs ---------- */}
       <section id="tarifs" className="mx-auto max-w-6xl scroll-mt-20 px-4 py-20">

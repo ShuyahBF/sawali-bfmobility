@@ -343,6 +343,10 @@ export default {
   "vehicule.commander": "Commander dans cette classe",
   "vehicule.autres": "Voir tous les véhicules de la classe",
   "vehicule.sansPhoto": "Pas encore de photo",
+  // --- Lot 19 : galerie « Nos véhicules » de l'accueil
+  "vitrine.titre": "Nos véhicules",
+  "vitrine.decouvrir": "Découvrir",
+  "vitrine.commander": "Commander",
   "photos.vue.face": "Vue de face",
   "photos.vue.cabine_avant": "Intérieur cabine avant",
   "photos.vue.cabine_arriere": "Intérieur cabine arrière",

@@ -188,6 +188,26 @@ async def apercu_categorie(code: str) -> List[Dict[str, Any]]:
     return sortie[:APERCU_MAX]
 
 
+@router.get("/public/vehicules")
+async def vitrine_vehicules():
+    """Lot 19 — galerie « Nos véhicules » de l'accueil (style vitrine) : un véhicule en service avec photo par carte,
+    sa première photo, son nom et sa classe ; les disponibles d'abord. Jamais d'immatriculation."""
+    from routes.public import categories_actives
+    noms = {c["code"]: c["nom"] for c in await categories_actives()}
+    sortie: List[Dict[str, Any]] = []
+    async for v in db.vehicules.find({"statut": {"$ne": "hors_service"}, "photos": {"$ne": {}}},
+                                     {"_id": 0, "id": 1, "marque": 1, "modele": 1, "annee": 1, "categorie": 1,
+                                      "statut": 1, "photos": 1}).sort([("marque", 1), ("modele", 1)]):
+        photos = vues_publiques(v.get("photos") or {})
+        if not photos or v.get("categorie") not in noms:   # sans photo ou classe désactivée : pas de carte
+            continue
+        sortie.append({"id": v["id"], "nom": f"{v.get('marque') or ''} {v.get('modele') or ''}".strip(),
+                       "annee": v.get("annee"), "categorie": v.get("categorie"), "classe": noms[v["categorie"]],
+                       "photo_url": photos[0]["url"], "disponible": v.get("statut") == "disponible"})
+    sortie.sort(key=lambda x: not x["disponible"])
+    return sortie
+
+
 @router.get("/public/vehicules/{vid}")
 async def page_vehicule(vid: str):
     """Page publique d'un véhicule : fiche, photos et tarifs de sa classe (catégorie)."""

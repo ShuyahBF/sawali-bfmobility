@@ -53,3 +53,12 @@ def test_apercu_des_tarifs_et_page_du_vehicule(c):
 
     # Véhicule inconnu : 404
     assert c.get("/api/public/vehicules/inconnu").status_code == 404
+
+
+def test_vitrine_nos_vehicules(c):
+    """Lot 19 — galerie de l'accueil : véhicules avec photo, nom, classe ; jamais d'immatriculation."""
+    vitrine = c.get("/api/public/vehicules").json()
+    assert vitrine, "le test précédent a mis une photo sur un véhicule"
+    carte = vitrine[0]
+    assert {"id", "nom", "classe", "categorie", "photo_url", "disponible"} <= set(carte)
+    assert "immatriculation" not in str(vitrine)

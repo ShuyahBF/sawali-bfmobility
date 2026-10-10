@@ -304,6 +304,10 @@ export default {
   "vehicule.commander": "Book in this class",
   "vehicule.autres": "See all vehicles in this class",
   "vehicule.sansPhoto": "No photo yet",
+  // --- Lot 19 : galerie « Nos véhicules » de l'accueil
+  "vitrine.titre": "Our vehicles",
+  "vitrine.decouvrir": "Discover",
+  "vitrine.commander": "Book",
   "photos.vue.face": "Front view",
   "photos.vue.cabine_avant": "Front cabin",
   "photos.vue.cabine_arriere": "Rear cabin",

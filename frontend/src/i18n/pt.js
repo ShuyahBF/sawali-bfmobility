@@ -306,6 +306,10 @@ export default {
   "vehicule.commander": "Pedir nesta classe",
   "vehicule.autres": "Ver todos os veículos da classe",
   "vehicule.sansPhoto": "Ainda sem foto",
+  // --- Lot 19 : galerie « Nos véhicules » de l'accueil
+  "vitrine.titre": "Os nossos veículos",
+  "vitrine.decouvrir": "Descobrir",
+  "vitrine.commander": "Pedir",
   "photos.vue.face": "Vista frontal",
   "photos.vue.cabine_avant": "Cabine dianteira",
   "photos.vue.cabine_arriere": "Cabine traseira",

@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 21,
+    date: '10/10/2026',
+    titre: 'Retour à l\'accueil dans la carte de connexion',
+    description: 'Le lien « ← Retour à l\'accueil » est maintenant dans la carte Connexion / Inscription, sous « Créer un compte », comme sur beAuthentik.',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 20,
     date: '10/10/2026',
     titre: 'Fiche technique et comparaison des véhicules',

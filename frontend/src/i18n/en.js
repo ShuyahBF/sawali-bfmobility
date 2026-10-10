@@ -274,7 +274,7 @@ export default {
   'nt.titre': 'This page doesn’t exist.',
   'nt.texte': 'Check the address or start again from the home page.',
   'nt.retour': 'Back to home',
-  'cnx.retourSite': 'Back to the site',   // lot 17 : lien de retour au site sur Connexion / Inscription
+  "cnx.retourAccueil": "Back to home",   // lot 21 : lien dans la carte Connexion / Inscription
 
   // --- Lot 9 : photos des véhicules (back-office et portail public)
   "photos.voir": "See the vehicles",

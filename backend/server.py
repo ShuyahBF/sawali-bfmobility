@@ -12,6 +12,7 @@ import version_plateforme
 from config import get_settings
 from db import creer_index
 from routes import admin, auth, chauffeur, courses, documents_vehicules, paiements, photos_vehicules, public   # lot 9 : photos ; lot 11 : scans
+from routes import retours_sawali   # lot 24 : retours signés de SAWALI (statuts, réponses, STOP, statistiques)
 from seed import initialiser
 
 reglages = get_settings()
@@ -45,6 +46,7 @@ api.include_router(paiements.router)   # lot 2 : paiement en ligne (avant admin 
 api.include_router(photos_vehicules.router)   # lot 9 : 4 photos par véhicule (avant admin : routes plus précises)
 api.include_router(documents_vehicules.router)   # lot 11 : scans assurance, visite technique, TVM
 api.include_router(admin.router)
+api.include_router(retours_sawali.router)   # lot 24 : /api/webhooks/liluvine-retour
 # SAWALI lot 90 — support SAWALI (personnel du back-office) : identité envoyée à SAWALI pour le fil de discussion
 from securite import utilisateur_courant  # noqa: E402
 api.include_router(support_sawali.creer_router(utilisateur_courant, lambda u: {

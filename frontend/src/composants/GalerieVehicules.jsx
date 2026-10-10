@@ -22,7 +22,8 @@ const ZOOM_MIN = 1
 const ZOOM_MAX = 5
 
 // ---------------------------------------------------------------------------- Visionneuse plein écran
-function Visionneuse({ titre, photos, indexDepart, onFermer }) {
+export function Visionneuse(   // lot 16 : réutilisée par la page du véhicule
+{ titre, photos, indexDepart, onFermer }) {
   const { t } = useLangue()
   const [index, setIndex] = useState(indexDepart)
   const [zoom, setZoom] = useState(1)

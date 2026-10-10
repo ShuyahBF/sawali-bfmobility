@@ -79,6 +79,9 @@ async def categories_actives() -> list:
     async for c in db.categories.find({"actif": {"$ne": False}}, {"_id": 0}).sort("ordre", 1):
         c["promo_active"] = promo_active(c)
         c["vehicules_disponibles"] = await db.vehicules.count_documents({"categorie": c["code"], "statut": "disponible"})
+        # Lot 16 — aperçu des véhicules de la catégorie (photo de face) affiché à côté des tarifs
+        from routes.photos_vehicules import apercu_categorie
+        c["apercu_vehicules"] = await apercu_categorie(c["code"])
         sortie.append(c)
     return sortie
 

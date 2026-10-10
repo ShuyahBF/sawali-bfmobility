@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 16,
+    date: '10/10/2026',
+    titre: 'Photos des véhicules à côté des tarifs',
+    description: 'Le tableau des tarifs montre les photos des véhicules de chaque catégorie ; un clic ouvre la page du véhicule (photos, description, classe et tarifs). La description se saisit dans la fiche du véhicule.',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 14,
     date: '09/10/2026',
     titre: 'Version courte dans la barre latérale',

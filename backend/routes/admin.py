@@ -34,6 +34,7 @@ RESSOURCES: Dict[str, Dict[str, Any]] = {
             "marque": ("str", True), "modele": ("str", True), "annee": ("int", False), "immatriculation": ("str", True),
             "energie": ("enum:" + "|".join(ENERGIES), True), "categorie": ("str", True), "couleur": ("str", False),
             "places": ("int", False), "confort": ("list", False), "autonomie_km": ("float", False),
+            "description": ("str", False),   # lot 16 : texte de présentation affiché sur la page publique du véhicule
             "capacite_batterie_kwh": ("float", False), "reservoir_l": ("float", False), "kilometrage": ("float", False),
             "statut": ("enum:disponible|en_service|maintenance|hors_service", False), "chauffeur_id": ("str", False),
             "assurance_expire": ("date", False), "controle_technique_expire": ("date", False), "photo_url": ("str", False),

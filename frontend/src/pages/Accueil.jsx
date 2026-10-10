@@ -2,13 +2,14 @@
 // Page d'accueil (vitrine) : héros + simulateur de prix, catégories et tarifs,
 // location avec chauffeur, avantages, « Devenez chauffeur ».
 // ============================================================================
-import { useState } from 'react'   // lot 9 : ouverture de la galerie
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'   // lot 9 : ouverture de la galerie ; lot 16 : retour sur « #tarifs »
+import { Link, useLocation } from 'react-router-dom'
 import PageSite from '@/composants/MiseEnPage.jsx'
 import Simulateur from '@/composants/Simulateur.jsx'
 import BadgeEnergie from '@/composants/BadgeEnergie.jsx'
 import { useConfig } from '@/contexte/Config.jsx'
 import GalerieVehicules from '@/composants/GalerieVehicules.jsx'   // lot 9 : photos des véhicules
+import { urlImage } from '@/composants/PhotosVehicule.jsx'          // lot 16 : vignettes à côté des tarifs
 import { useLangue } from '@/i18n/index.jsx'
 
 // Fond du héros : plan de ville stylisé (rues de Ouaga vues d'en haut) + trajet A → B tracé une seule fois
@@ -51,6 +52,32 @@ function PlanVille() {
   )
 }
 
+// Lot 16 — vignettes des véhicules d'une catégorie (au plus 3, disponibles d'abord), chacune liée à la page du véhicule
+function VignettesVehicules({ apercu }) {
+  const { t } = useLangue()
+  if (!apercu || apercu.length === 0) return <div className="hidden md:block" aria-hidden="true" />
+  return (
+    <ul className="flex gap-2">
+      {apercu.map((v) => (
+        <li key={v.id}>
+          <Link
+            to={`/vehicule/${v.id}`}
+            title={`${v.nom} — ${t('vehicule.voirPage')}`}
+            aria-label={`${v.nom} — ${t('vehicule.voirPage')}`}
+            className="relative block h-16 w-20 overflow-hidden rounded-xl ring-1 ring-nuit/10 transition hover:ring-2 hover:ring-nuit focus-visible:outline focus-visible:outline-2 focus-visible:outline-nuit"
+          >
+            <img src={urlImage(v.photo_url)} alt="" loading="lazy" className="h-full w-full object-cover" />
+            {/* Pictogramme « ouvrir la page » dans le coin */}
+            <span aria-hidden="true" className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-white/90 text-[11px] font-bold text-nuit shadow">↗</span>
+            {/* Petit point vert : véhicule disponible maintenant */}
+            {v.disponible && <span aria-hidden="true" className="absolute bottom-1 left-1 h-2.5 w-2.5 rounded-full bg-volt-500 ring-2 ring-white" />}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 // Ligne d'une catégorie (tarifs publics) — refonte 09/10/2026 : une LIGNE par catégorie pour comparer d'un coup d'œil
 // (nom et énergies | prix au km en grand | heure, jour, prise en charge | disponibilité et bouton « Choisir »)
 function LigneCategorie({ cat }) {
@@ -58,7 +85,7 @@ function LigneCategorie({ cat }) {
   const { monnaie } = useConfig()
   const [galerie, setGalerie] = useState(false)   // lot 9 : photos des véhicules de la catégorie
   return (
-    <li className="group grid gap-4 py-6 md:grid-cols-[1.3fr_1fr_1.2fr_auto] md:items-center md:gap-8">
+    <li className="group grid gap-4 py-6 md:grid-cols-[1.2fr_auto_1fr_1.1fr_auto] md:items-center md:gap-6 lg:gap-8">
       <div>
         <div className="flex flex-wrap items-center gap-2">
           <h3 className="text-xl font-bold sm:text-2xl">{cat.nom}</h3>
@@ -72,6 +99,9 @@ function LigneCategorie({ cat }) {
         <p className="mt-1 text-sm text-ardoise">{cat.description}</p>
         <div className="mt-2 flex flex-wrap gap-1">{(cat.energies || []).map((e) => <BadgeEnergie key={e} energie={e} />)}</div>
       </div>
+      {/* Lot 16 — photos des véhicules À CÔTÉ des tarifs : chaque vignette (avec le pictogramme ↗) ouvre la page du
+          véhicule (photos, description, classe, caractéristiques). Sans photo : la colonne reste vide. */}
+      <VignettesVehicules apercu={cat.apercu_vehicules} />
       {/* Prix principal : au km */}
       <p className="font-display text-3xl font-bold tabular-nums sm:text-4xl">
         {monnaie(cat.prix_km)}<span className="ml-1 font-sans text-base font-normal text-ardoise">/ {t('accueil.parKm')}</span>
@@ -108,6 +138,11 @@ const ICONES = {
 export default function Accueil() {
   const { t } = useLangue()
   const { categories } = useConfig()
+  const { hash } = useLocation()
+  // Lot 16 : « ← Retour aux tarifs » depuis la page d'un véhicule ouvre l'accueil directement sur le tableau des tarifs
+  useEffect(() => {
+    if (hash === '#tarifs' && categories.length) document.getElementById('tarifs')?.scrollIntoView({ block: 'start' })
+  }, [hash, categories.length])
   const avantages = [
     ['prix', 'av1'], ['carte', 'av2'], ['feuille', 'av3'], ['paiement', 'av4'],
   ]

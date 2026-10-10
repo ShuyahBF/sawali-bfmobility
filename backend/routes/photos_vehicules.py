@@ -153,15 +153,50 @@ async def vehicules_de_la_categorie(code: str):
     """Véhicules en service de la catégorie qui ont au moins une photo (jamais d'immatriculation ni de chauffeur)."""
     sortie = []
     async for v in db.vehicules.find({"categorie": code, "statut": {"$ne": "hors_service"}}, {"_id": 0}).sort("marque", 1):
-        photos = vues_publiques(v.get("photos") or {})
-        if not photos:
+        if not vues_publiques(v.get("photos") or {}):
             continue
-        sortie.append({
-            "id": v["id"], "marque": v.get("marque") or "", "modele": v.get("modele") or "", "annee": v.get("annee"),
-            "couleur": v.get("couleur") or "", "energie": v.get("energie") or "", "places": v.get("places"),
-            "confort": v.get("confort") or [], "disponible": v.get("statut") == "disponible", "photos": photos,
-        })
+        sortie.append(fiche_publique(v))   # lot 16 : même fiche que la page du véhicule (description comprise)
     return sortie
+
+
+# Lot 16 — « les photos des véhicules à côté des tarifs ; un lien ou pictogramme ouvre la page du véhicule (photos,
+# description, classe…) ». Jamais d'immatriculation, de chauffeur ni de document administratif côté public.
+APERCU_MAX = 3      # vignettes au plus par catégorie dans le tableau des tarifs
+
+
+def fiche_publique(v: Dict[str, Any]) -> Dict[str, Any]:
+    """Ce que le public voit d'un véhicule."""
+    return {
+        "id": v["id"], "marque": v.get("marque") or "", "modele": v.get("modele") or "", "annee": v.get("annee"),
+        "couleur": v.get("couleur") or "", "energie": v.get("energie") or "", "places": v.get("places"),
+        "confort": v.get("confort") or [], "autonomie_km": v.get("autonomie_km"), "description": v.get("description") or "",
+        "categorie": v.get("categorie") or "", "disponible": v.get("statut") == "disponible",
+        "photos": vues_publiques(v.get("photos") or {}),
+    }
+
+
+async def apercu_categorie(code: str) -> List[Dict[str, Any]]:
+    """Jusqu'à 3 véhicules en service de la catégorie, avec leur première photo (disponibles d'abord)."""
+    sortie: List[Dict[str, Any]] = []
+    async for v in db.vehicules.find({"categorie": code, "statut": {"$ne": "hors_service"}, "photos": {"$ne": {}}},
+                                     {"_id": 0, "id": 1, "marque": 1, "modele": 1, "statut": 1, "photos": 1}).sort("marque", 1):
+        photos = vues_publiques(v.get("photos") or {})
+        if photos:
+            sortie.append({"id": v["id"], "nom": f"{v.get('marque') or ''} {v.get('modele') or ''}".strip(),
+                           "photo_url": photos[0]["url"], "disponible": v.get("statut") == "disponible"})
+    sortie.sort(key=lambda x: not x["disponible"])
+    return sortie[:APERCU_MAX]
+
+
+@router.get("/public/vehicules/{vid}")
+async def page_vehicule(vid: str):
+    """Page publique d'un véhicule : fiche, photos et tarifs de sa classe (catégorie)."""
+    v = await db.vehicules.find_one({"id": vid, "statut": {"$ne": "hors_service"}}, {"_id": 0})
+    if not v:
+        raise HTTPException(status_code=404, detail="Véhicule introuvable")
+    from routes.public import categories_actives
+    classe = next((c for c in await categories_actives() if c["code"] == v.get("categorie")), None)
+    return {**fiche_publique(v), "classe": classe}
 
 
 @router.get("/public/photos-vehicules/{pid}")

@@ -147,6 +147,8 @@ export function configRessource(nom, contexte = {}) {
           { cle: 'categorie', section: 'identite', libelle: c('categorie'), type: 'select', options: optionsCategories, requis: true },
           { cle: 'places', section: 'identite', libelle: c('places'), type: 'nombre' },
           { cle: 'confort', section: 'identite', libelle: c('confort'), type: 'liste', aide: t('adm.aide.confort'), large: true },
+          // Lot 16 : présentation du véhicule affichée sur sa page publique (« /vehicule/:id »)
+          { cle: 'description', section: 'identite', libelle: c('description'), type: 'zone', large: true },
           { cle: 'autonomie_km', section: 'technique', libelle: c('autonomie'), type: 'nombre', visible: (f) => f.energie !== 'thermique' },
           { cle: 'capacite_batterie_kwh', section: 'technique', libelle: c('batterie'), type: 'nombre', visible: (f) => f.energie !== 'thermique' },
           { cle: 'reservoir_l', section: 'technique', libelle: c('reservoir'), type: 'nombre', visible: (f) => f.energie !== 'electrique' },

@@ -1,0 +1,55 @@
+"""Lot 16 — photos des véhicules à côté des tarifs (aperçu par catégorie) et page publique d'un véhicule
+(photos, description, classe et tarifs), sans immatriculation ni document."""
+import base64
+
+import pytest
+from fastapi.testclient import TestClient
+
+import server
+
+# Plus petite image JPEG valide (en-têtes suffisants pour la détection du format)
+JPEG = b"\xff\xd8\xff\xe0" + b"\x00" * 64 + b"\xff\xd9"
+
+
+@pytest.fixture(scope="module")
+def c():
+    with TestClient(server.app) as client:
+        yield client
+
+
+def connexion(c, identifiant, mdp):
+    r = c.post("/api/auth/connexion", json={"identifiant": identifiant, "mot_de_passe": mdp})
+    assert r.status_code == 200, r.text
+    return {"Authorization": f"Bearer {r.json()['jeton']}"}
+
+
+def test_apercu_des_tarifs_et_page_du_vehicule(c):
+    admin = connexion(c, "admin@test.bf", "admin-test-123")
+    vehicules = c.get("/api/admin/vehicules", headers=admin).json()
+    v = vehicules[0] if isinstance(vehicules, list) else vehicules["lignes"][0]
+    vid, cat = v["id"], v["categorie"]
+
+    # La direction saisit la description et envoie la photo de face
+    r = c.patch(f"/api/admin/vehicules/{vid}", headers=admin, json={"description": "Berline climatisée, idéale pour l'aéroport."})
+    assert r.status_code == 200, r.text
+    image = "data:image/jpeg;base64," + base64.b64encode(JPEG).decode()
+    assert c.put(f"/api/admin/vehicules/{vid}/photos/face", headers=admin, json={"image": image}).status_code == 200
+
+    # Tableau des tarifs : la catégorie porte l'aperçu (au plus 3 vignettes) avec le lien vers la page du véhicule
+    categories = c.get("/api/public/categories").json()
+    apercu = next(x for x in categories if x["code"] == cat)["apercu_vehicules"]
+    assert 1 <= len(apercu) <= 3
+    vignette = next(x for x in apercu if x["id"] == vid)
+    assert vignette["photo_url"] and vignette["nom"]
+
+    # Page du véhicule : description, photos et classe avec ses tarifs ; aucune donnée administrative
+    page = c.get(f"/api/public/vehicules/{vid}").json()
+    assert page["description"].startswith("Berline")
+    assert [p["vue"] for p in page["photos"]][0] == "face"
+    assert page["classe"]["code"] == cat and "prix_km" in page["classe"]
+    texte = str(page)
+    assert v["immatriculation"] not in texte
+    assert "carte_grise" not in page and "documents" not in page and "chauffeur" not in texte
+
+    # Véhicule inconnu : 404
+    assert c.get("/api/public/vehicules/inconnu").status_code == 404

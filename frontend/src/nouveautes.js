@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 20,
+    date: '10/10/2026',
+    titre: 'Fiche technique et comparaison des véhicules',
+    description: 'Chaque véhicule a sa fiche technique (intérieur, sièges, écran, audio, climatisation, énergie, sécurité) et le site compare jusqu\'à 3 véhicules côte à côte. Saisie : fiche du véhicule → « Fiche technique ».',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 19,
     date: '10/10/2026',
     titre: 'Galerie « Nos véhicules » sur l\'accueil',

@@ -16,6 +16,7 @@ import PageSite from '@/composants/MiseEnPage.jsx'
 import Jauge from '@/composants/Jauge.jsx'
 import BadgeEnergie from '@/composants/BadgeEnergie.jsx'
 import GalerieVehicules, { Visionneuse } from '@/composants/GalerieVehicules.jsx'
+import FicheTechnique from '@/composants/FicheTechnique.jsx'   // lot 20 : fiche technique façon comparateur
 import { urlImage } from '@/composants/PhotosVehicule.jsx'
 import { useConfig } from '@/contexte/Config.jsx'
 import { useLangue } from '@/i18n/index.jsx'
@@ -140,6 +141,16 @@ export default function Vehicule() {
               {classe && <button type="button" onClick={() => setGalerie(true)} className="btn-secondaire">{t('vehicule.autres')}</button>}
             </div>
           </div>
+        </div>
+
+        {/* Lot 20 — fiche technique (rubriques Intérieur, Sièges, Écran, Audio, Climatisation, Énergie, Sécurité)
+            et lien vers la comparaison avec d'autres véhicules */}
+        <div className="mt-16">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <h2 className="text-2xl font-bold">{t('fiche.titre')}</h2>
+            <Link to={`/comparer?ids=${v.id}`} className="text-sm text-nuit/80 underline underline-offset-4 hover:text-nuit">{t('fiche.comparerAvec')}</Link>
+          </div>
+          <div className="mt-6"><FicheTechnique vehicules={[v]} /></div>
         </div>
       </section>
 

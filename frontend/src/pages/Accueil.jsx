@@ -140,7 +140,11 @@ function NosVehicules() {
   if (vehicules.length === 0) return null
   return (
     <section id="vehicules" className="mx-auto max-w-6xl scroll-mt-20 px-4 pt-20">
-      <h2 className="text-3xl font-bold sm:text-[2.6rem]">{t('vitrine.titre')}</h2>
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <h2 className="text-3xl font-bold sm:text-[2.6rem]">{t('vitrine.titre')}</h2>
+        {/* Lot 20 — comparaison des fiches techniques */}
+        {vehicules.length > 1 && <Link to="/comparer" className="text-sm text-nuit/80 underline underline-offset-4 hover:text-nuit">{t('fiche.comparer')}</Link>}
+      </div>
       <ul className="mt-10 grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
         {vehicules.map((v) => (
           <li key={v.id} className="group text-center">
@@ -177,9 +181,16 @@ export default function Accueil() {
   const { t } = useLangue()
   const { categories } = useConfig()
   const { hash } = useLocation()
-  // Lot 16 : « ← Retour aux tarifs » depuis la page d'un véhicule ouvre l'accueil directement sur le tableau des tarifs
+  // Lot 16 / lot 20 : « ← Retour aux tarifs » ou « ← Retour aux véhicules » ouvre l'accueil sur la bonne section ;
+  // la section peut arriver après le chargement (véhicules lus en différé) : quelques essais espacés
   useEffect(() => {
-    if (hash === '#tarifs' && categories.length) document.getElementById('tarifs')?.scrollIntoView({ block: 'start' })
+    if (!hash) return
+    let essais = 0
+    const minuteur = setInterval(() => {
+      const cible = document.getElementById(hash.slice(1))
+      if (cible || ++essais > 15) { clearInterval(minuteur); cible?.scrollIntoView({ block: 'start' }) }
+    }, 150)
+    return () => clearInterval(minuteur)
   }, [hash, categories.length])
   const avantages = [
     ['prix', 'av1'], ['carte', 'av2'], ['feuille', 'av3'], ['paiement', 'av4'],

@@ -62,3 +62,20 @@ def test_vitrine_nos_vehicules(c):
     carte = vitrine[0]
     assert {"id", "nom", "classe", "categorie", "photo_url", "disponible"} <= set(carte)
     assert "immatriculation" not in str(vitrine)
+
+
+def test_fiche_technique_publique(c):
+    """Lot 20 — la fiche technique saisie dans le back-office apparaît sur la page publique du véhicule."""
+    admin = connexion(c, "admin@test.bf", "admin-test-123")
+    vehicules = c.get("/api/admin/vehicules", headers=admin).json()
+    v = vehicules[0] if isinstance(vehicules, list) else vehicules["lignes"][0]
+    r = c.patch(f"/api/admin/vehicules/{v['id']}", headers=admin, json={
+        "interieur": ["Volant chauffant", "Toit panoramique"], "sieges": ["Sièges avant chauffants"],
+        "ecran_pouces": 10.1, "ecran": "Écran tactile avant", "audio_hp": 6, "climatisation": ["Climatisation automatique"],
+        "securite": ["6 airbags", "ABS"], "boite": "automatique", "puissance_ch": 120})
+    assert r.status_code == 200, r.text
+    tech = c.get(f"/api/public/vehicules/{v['id']}").json()["technique"]
+    assert tech["interieur"] == ["Volant chauffant", "Toit panoramique"] and tech["ecran_pouces"] == 10.1
+    assert tech["audio_hp"] == 6 and tech["boite"] == "automatique" and "immatriculation" not in tech
+    # Valeur hors liste refusée
+    assert c.patch(f"/api/admin/vehicules/{v['id']}", headers=admin, json={"boite": "robot"}).status_code == 422

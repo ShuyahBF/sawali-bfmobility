@@ -3,9 +3,10 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
+import signal_connexion   # lot 26 : chaque connexion est signalée à SAWALI (alerte WhatsApp du propriétaire)
 from db import db
 from metier import PAYS, iso
 from outils import nouvel_id, parametres
@@ -41,7 +42,7 @@ async def indicatif_pays() -> str:
 
 
 @router.post("/inscription")
-async def inscription(corps: Inscription):
+async def inscription(corps: Inscription, request: Request):
     """Création d'un compte CLIENT (les autres rôles sont créés par la société dans le back-office)."""
     telephone = normaliser_telephone(corps.telephone, await indicatif_pays())
     email = (corps.email or "").strip().lower() or None
@@ -55,11 +56,13 @@ async def inscription(corps: Inscription):
     if email:
         u["email"] = email
     await db.utilisateurs.insert_one(dict(u))
+    # Lot 26 : le nouveau client est connecté d'office → signal « connexion » à SAWALI (arrière-plan)
+    signal_connexion.signaler_connexion(request, u)
     return {"jeton": creer_jeton(u["id"]), "utilisateur": public(u)}
 
 
 @router.post("/connexion")
-async def connexion(corps: Connexion):
+async def connexion(corps: Connexion, request: Request):
     """Connexion par e-mail OU numéro de téléphone + mot de passe."""
     ident = corps.identifiant.strip()
     filtre: Dict[str, Any] = {"email": ident.lower()} if "@" in ident else {"telephone": normaliser_telephone(ident, await indicatif_pays())}
@@ -69,6 +72,8 @@ async def connexion(corps: Connexion):
     if not u.get("actif", True):
         raise HTTPException(status_code=403, detail="Compte désactivé : contactez la société")
     await db.utilisateurs.update_one({"id": u["id"]}, {"$set": {"derniere_connexion": iso()}})
+    # Lot 26 : connexion par mot de passe → signal « connexion » à SAWALI (arrière-plan, jamais bloquant)
+    signal_connexion.signaler_connexion(request, u)
     return {"jeton": creer_jeton(u["id"]), "utilisateur": public(u)}
 
 
@@ -166,7 +171,7 @@ async def demander_code(corps: DemandeCode):
 
 
 @router.post("/otp/verification")
-async def verifier_code(corps: VerificationCode):
+async def verifier_code(corps: VerificationCode, request: Request):
     """Vérifie le code ; connecte l'utilisateur (ou crée son compte client avec le nom donné)."""
     telephone = normaliser_telephone(corps.telephone, await indicatif_pays())
     otp = await db.otp.find_one({"telephone": telephone, "utilise": False}, sort=[("cree_le", -1)])
@@ -190,4 +195,6 @@ async def verifier_code(corps: VerificationCode):
         await db.utilisateurs.insert_one(dict(u))
     else:
         await db.utilisateurs.update_one({"id": u["id"]}, {"$set": {"telephone_verifie": True, "derniere_connexion": iso()}})
+    # Lot 26 : connexion par code WhatsApp (ou création du compte) → signal « connexion » à SAWALI
+    signal_connexion.signaler_connexion(request, u)
     return {"jeton": creer_jeton(u["id"]), "utilisateur": public(u)}

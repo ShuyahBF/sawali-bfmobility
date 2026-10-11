@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 26,
+    date: '11/10/2026',
+    titre: 'Alerte WhatsApp à chaque connexion',
+    description: 'Chaque connexion (mot de passe, code WhatsApp, nouveau compte) et chaque visite d\'un visiteur non connecté sont signalées à SAWALI, qui vous prévient par WhatsApp (sans répétition ni robots).',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 25,
     date: '11/10/2026',
     titre: 'Présence visible dans SAWALI',

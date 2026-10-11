@@ -7,6 +7,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 import presence_sawali
+import signal_connexion   # lot 26 : connexions et visites signalées à SAWALI
 import support_sawali   # SAWALI lot 90 : pictogramme d'assistance → support SAWALI
 import version_plateforme
 from config import get_settings
@@ -47,6 +48,7 @@ api.include_router(photos_vehicules.router)   # lot 9 : 4 photos par véhicule (
 api.include_router(documents_vehicules.router)   # lot 11 : scans assurance, visite technique, TVM
 api.include_router(admin.router)
 api.include_router(retours_sawali.router)   # lot 24 : /api/webhooks/liluvine-retour
+api.include_router(signal_connexion.router)   # lot 26 : /api/presence/visite (visiteur non connecté)
 # SAWALI lot 90 — support SAWALI (personnel du back-office) : identité envoyée à SAWALI pour le fil de discussion
 from securite import utilisateur_courant  # noqa: E402
 api.include_router(support_sawali.creer_router(utilisateur_courant, lambda u: {

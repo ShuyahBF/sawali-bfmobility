@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 27,
+    date: '11/10/2026',
+    titre: 'pawaPay : réglages communs',
+    description: 'L\u2019environnement et les jetons pawaPay viennent désormais du groupe d\u2019environnement Render « pawapay-commun », partagé par toutes les plateformes : un jeton changé une fois l\u2019est partout.',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 26,
     date: '11/10/2026',
     titre: 'Alerte WhatsApp à chaque connexion',

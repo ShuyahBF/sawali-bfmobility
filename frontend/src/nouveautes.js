@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 25,
+    date: '11/10/2026',
+    titre: 'Présence visible dans SAWALI',
+    description: 'bfmobility envoie à SAWALI le nombre d\'utilisateurs connectés (actifs ces 5 dernières minutes) : la carte de la plateforme n\'affiche plus « présence inconnue ».',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 23,
     date: '10/10/2026',
     titre: 'Carrousel « Nos véhicules » sur l\'accueil',

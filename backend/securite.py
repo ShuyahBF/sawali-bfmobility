@@ -68,6 +68,11 @@ async def utilisateur_courant(identite: Optional[HTTPAuthorizationCredentials] =
     u = await db.utilisateurs.find_one({"id": charge.get("sub")}, {"_id": 0})
     if not u or not u.get("actif", True):
         raise HTTPException(status_code=401, detail="Compte introuvable ou désactivé")
+    # Présence (lot 25) : date de dernière activité, notée au plus une fois par minute (évite une écriture
+    # à chaque appel). SAWALI en déduit le nombre d'utilisateurs connectés (actifs ces 5 dernières minutes).
+    a_present = maintenant()
+    if (u.get("derniere_activite") or "") < (a_present - timedelta(seconds=60)).isoformat():
+        await db.utilisateurs.update_one({"id": u["id"]}, {"$set": {"derniere_activite": a_present.isoformat()}})
     return u
 
 

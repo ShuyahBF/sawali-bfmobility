@@ -201,6 +201,8 @@ export default function Parametres() {
                   <EtatService libelle={t('otp.ongletCode')} actif={config.connexion_par_code} t={t} />
                 </ul>
                 <Link to="/admin/candidatures" className="btn-secondaire mt-4">{t('adm.param.voirCandidatures')}</Link>
+                {/* Lot 26 : connexions et visites signalées à SAWALI (alerte WhatsApp du propriétaire) */}
+                <p className="mt-4 rounded-xl bg-brume px-3 py-2 text-xs text-ardoise">{t('adm.param.signalConnexions')}</p>
               </div>
             )}
           </section>

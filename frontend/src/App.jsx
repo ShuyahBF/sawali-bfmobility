@@ -17,6 +17,7 @@ import Connexion from '@/pages/Connexion.jsx'
 import Inscription from '@/pages/Inscription.jsx'
 import NonTrouve from '@/pages/NonTrouve.jsx'
 import ProtectionEcran from '@/composants/ProtectionEcran.jsx'
+import SignalVisite from '@/composants/SignalVisite.jsx'   // lot 26 : visite signalée à SAWALI
 
 // Chargement à la demande : les pages avec carte (Leaflet) et les espaces
 // connectés ne sont téléchargés qu'à la première visite (accueil plus rapide)
@@ -71,6 +72,8 @@ export default function App() {
     <Suspense fallback={attente}>
       {/* Protection de l'écran : une seule fois pour tout le site */}
       <ProtectionEcran />
+      {/* Lot 26 : visiteur non connecté → signal « visite » (1 fois / 30 min par navigateur) */}
+      <SignalVisite />
       <Routes>
         {/* Public */}
         <Route path="/" element={<Accueil />} />

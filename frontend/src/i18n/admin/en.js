@@ -317,6 +317,8 @@ export default {
   'adm.param.email_support': 'Customer service email',
   'adm.param.services': 'Online services',
   'adm.param.servicesAide': 'Enabled by the server (environment variables on Render), with no key in the website.',
+  // Lot 26 : connexions et visites signalées à SAWALI
+  'adm.param.signalConnexions': 'Lot 26: every sign-in (password, WhatsApp code, account creation) and every visit by a signed-out visitor is reported to SAWALI (IP address, account name, phone and role, page, browser; never a password). SAWALI alerts you on WhatsApp, without repeats or robots. Uses the LILUVINE_WA_HMAC key already set on Render.',
   'adm.param.actif': 'Active',
   'adm.param.nonConfigure': 'Not configured',
   'adm.param.voirCandidatures': 'View driver applications',

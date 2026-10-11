@@ -64,9 +64,14 @@ async def _statistiques(debut: str, fin: str) -> Dict[str, Any]:
     payes = await db.paiements.find({"statut": "paye", "maj_le": periode}, {"_id": 0, "montant": 1}).to_list(5000)
     encaisse = int(sum(float(p.get("montant") or 0) for p in payes))
     clients = await db.utilisateurs.count_documents({"role": "client", "cree_le": periode})
+    # Présence (lot 25) : utilisateurs actifs ces 5 dernières minutes (affichés « N connecté(s) » dans SAWALI)
+    from datetime import datetime, timedelta, timezone
+    il_y_a_5_min = (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat()
+    connectes = await db.utilisateurs.count_documents({"derniere_activite": {"$gte": il_y_a_5_min}})
     import version_plateforme
     v = version_plateforme.infos_version()
     return {
+        "utilisateurs_connectes": connectes,
         "indicateurs": [
             {"cle": "courses", "libelle": "Courses demandées", "valeur": demandees},
             {"cle": "terminees", "libelle": "Courses terminées", "valeur": terminees},

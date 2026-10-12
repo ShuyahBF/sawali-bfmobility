@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 29,
+    date: '12/10/2026',
+    titre: 'Vos véhicules sur Facebook',
+    description: 'Liluvine (SAWALI) peut présenter les véhicules disponibles sur la page Facebook de bfmobility : photo, classe, tarifs et lien vers la page du véhicule, jamais l\u2019immatriculation ni le chauffeur. Réglages (page, jours, validation) dans SAWALI.',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 27,
     date: '11/10/2026',
     titre: 'pawaPay : réglages communs',

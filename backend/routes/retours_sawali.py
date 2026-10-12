@@ -11,7 +11,9 @@ Pour un développeur WinDev : SAWALI « appelle » bfmobility pour lui dire ce q
   - « statut »         : message WhatsApp envoyé / remis / lu / en échec → journal des retours ;
   - « reponse »        : le client a répondu à un message de bfmobility  → journal des retours ;
   - « desinscription » : le client a répondu STOP                         → fiche utilisateur marquée ;
-  - « stats_du_jour »  : SAWALI demande les chiffres du jour (synthèse quotidienne de Liluvine).
+  - « stats_du_jour »  : SAWALI demande les chiffres du jour (synthèse quotidienne de Liluvine) ;
+  - « facebook_candidats » / « facebook_publie » : page Facebook de bfmobility animée par Liluvine (véhicules
+                         proposés, publication notée) — voir partage_facebook.py.
 """
 from __future__ import annotations
 
@@ -91,6 +93,11 @@ async def retour(request: Request):
     if genre == "stats_du_jour":
         debut = str(corps.get("debut") or iso()[:10] + "T00:00:00+00:00")
         return await _statistiques(debut, str(corps.get("fin") or iso()))
+    # Page Facebook de bfmobility animée par Liluvine : SAWALI demande des véhicules à publier (facebook_candidats)
+    # ou signale une publication faite (facebook_publie) — réponse immédiate, voir partage_facebook.py
+    import partage_facebook
+    if genre in partage_facebook.TYPES:
+        return await partage_facebook.traiter(corps, request)
     # Statut, réponse, désinscription… : gardés au journal des retours (trace)
     await db.retours_sawali.insert_one({**{k: v for k, v in corps.items() if k != "_id"}, "recu_le": iso()})
     if genre == "desinscription":

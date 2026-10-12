@@ -65,6 +65,10 @@ class Settings(BaseSettings):
     ovh_sms_sender: Optional[str] = None
     default_phone_country_code: str = "226"
 
+    # Adresse publique du SERVEUR (ex. https://bfmobility-backend.onrender.com) : adresse absolue des photos des
+    # véhicules publiées sur la page Facebook (partage_facebook.py) ; sinon déduite de la requête reçue
+    public_api_url: Optional[str] = None
+
     # --- Lot 2 : itinéraires routiers (serveur OSRM ; public par défaut, remplaçable par le vôtre) ---
     osrm_url: str = "https://router.project-osrm.org"
 

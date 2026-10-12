@@ -11,6 +11,10 @@ import { LangueProvider } from '@/i18n/index.jsx'
 import { ToastsProvider } from '@/composants/Toasts.jsx'
 import { ConfigProvider } from '@/contexte/Config.jsx'
 import { AuthProvider } from '@/contexte/Auth.jsx'
+// Règle 9 — Ctrl + Espace / double-clic : reprendre le texte par défaut (gris) d'un champ pour le modifier
+import { installerValeurParDefaut } from "./lib/valeurParDefaut";
+
+installerValeurParDefaut();
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

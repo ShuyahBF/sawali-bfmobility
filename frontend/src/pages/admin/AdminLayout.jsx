@@ -12,6 +12,7 @@ import { useLangue } from '@/i18n/index.jsx'
 import { useAuth } from '@/contexte/Auth.jsx'
 import SupportSawali from '@/composants/SupportSawali.jsx'   // SAWALI lot 90 : pictogramme d'assistance
 import api from '@/lib/api.js'
+import JaugeCluster from '@/composants/JaugeCluster.jsx'   // lot 32 : jauge du cluster Atlas (administrateur)
 
 // Menu complet ; « roles » = rôles qui voient l'entrée ;
 // groupe et libelle sont des clés de traduction (adm.menu.<clé>)
@@ -88,6 +89,8 @@ export default function AdminLayout() {
         {/* Lot 14 — règle du propriétaire : barre latérale = libellé court (version + date), sans lot ni commit ;
             le libellé détaillé reste réservé à la page Paramètres */}
         <Version className="mt-3 !text-white/45" />
+        {/* Lot 32 — jauge du cluster de production, à côté de la version (administrateur seulement) */}
+        <div className="mt-2"><JaugeCluster actif={role === 'admin'} /></div>
       </div>
     </div>
   )

@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 32,
+    date: '14/10/2026',
+    titre: 'Jauge du cluster de production',
+    description: 'Une pastille (administrateur) indique l\u2019espace occupé sur le cluster MongoDB Atlas et le nombre de collections : vert sous 45 %, orange dès 45 %, rouge dès 90 %. Limites réglables (ATLAS_LIMITE_MO, ATLAS_LIMITE_COLLECTIONS).',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 29,
     date: '12/10/2026',
     titre: 'Vos véhicules sur Facebook',

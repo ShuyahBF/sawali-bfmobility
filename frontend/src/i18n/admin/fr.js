@@ -319,6 +319,8 @@ export default {
   'adm.param.rub.plateforme': 'Plateforme',
   'adm.param.rub.tarification': 'Tarification',
   'adm.param.rub.support': 'Service client',
+  'adm.param.rub.android': "Application Android",
+  'adm.param.android.aide': "bfmobility s'installe sur téléphone comme une application (icône sur l'écran d'accueil, plein écran, page « Pas de connexion »). Elle se met à jour toute seule. Pour la publier sur le Play Store avec PWABuilder, suivre le fichier ANDROID.md du dépôt. La localisation du téléphone dans ce type d'application est moins fiable qu'en application Android native : à tester sur un vrai téléphone avant de s'appuyer dessus pour le suivi en temps réel des chauffeurs.",
   'adm.param.nom': 'Nom de la plateforme',
   'adm.param.slogan': 'Slogan',
   'adm.param.pays': 'Pays (code ISO, ex. BF)',

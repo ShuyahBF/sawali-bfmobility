@@ -7,6 +7,7 @@ import Logo from '@/composants/Logo.jsx'
 import EtatServeur from '@/composants/EtatServeur.jsx'
 import SelecteurLangue from '@/composants/SelecteurLangue.jsx'
 import Version from '@/composants/Version.jsx'
+import InstallerApplication from '@/composants/InstallerApplication.jsx'
 import { useLangue } from '@/i18n/index.jsx'
 
 export default function CarteAuth({ titre, sousTitre, children, pied }) {
@@ -28,6 +29,8 @@ export default function CarteAuth({ titre, sousTitre, children, pied }) {
             <span aria-hidden="true">←</span> {t('cnx.retourAccueil')}
           </Link>
         </div>
+        {/* Application Android : bouton « Installer l'application » (caché si déjà installée) */}
+        <div className="mt-4 flex justify-center"><InstallerApplication className="py-2 text-sm" /></div>
         {/* État du serveur + version */}
         <div className="mt-6 flex flex-col items-center gap-1 border-t border-nuit/10 pt-4">
           <EtatServeur />

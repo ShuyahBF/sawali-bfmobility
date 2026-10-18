@@ -12,6 +12,7 @@ import { useLangue } from '@/i18n/index.jsx'
 import Logo from './Logo.jsx'
 import SelecteurLangue from './SelecteurLangue.jsx'
 import Version from './Version.jsx'
+import InstallerApplication from './InstallerApplication.jsx'
 import SupportSawali from './SupportSawali.jsx'   // SAWALI lot 90 : assistance pour tout utilisateur connecté
 import api from '@/lib/api.js'
 
@@ -95,6 +96,8 @@ export function PiedDePage() {
           {config.telephone_support && <a href={`tel:${config.telephone_support}`} className="block text-sm hover:text-volt-400">{config.telephone_support}</a>}
           {config.email_support && <a href={`mailto:${config.email_support}`} className="block text-sm hover:text-volt-400">{config.email_support}</a>}
           <div className="mt-3"><SelecteurLangue clair /></div>
+          {/* Application Android : bouton d'installation (caché si déjà installée) */}
+          <div className="mt-3"><InstallerApplication className="py-2 text-sm" /></div>
         </div>
       </div>
       <div className="border-t border-white/10">

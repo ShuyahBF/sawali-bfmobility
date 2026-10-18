@@ -291,6 +291,8 @@ export default {
   'adm.param.rub.plateforme': 'Platform',
   'adm.param.rub.tarification': 'Pricing',
   'adm.param.rub.support': 'Customer service',
+  'adm.param.rub.android': 'Android app',
+  'adm.param.android.aide': 'bfmobility installs on a phone like an app (home-screen icon, full screen, “No connection” page) and updates itself. To publish it on the Play Store with PWABuilder, follow the ANDROID.md file in the repository. Phone location inside this kind of app is less reliable than in a native Android app: test on a real phone before relying on it for real-time driver tracking.',
   'adm.param.nom': 'Platform name',
   'adm.param.slogan': 'Tagline',
   'adm.param.pays': 'Country (ISO code, e.g. BF)',

@@ -1,6 +1,6 @@
 // ============================================================================
 // Paramètres de la société (admin) : GET / PATCH /admin/parametres
-// Rubriques : Nouveautés, Plateforme, Tarification, Service client, Version.
+// Rubriques : Nouveautés, Plateforme, Tarification, Service client, Application Android, Version.
 // Version affichée en libellé DÉTAILLÉ (page de paramétrage).
 // Lot 2 : itinéraire routier, notifications WhatsApp et rayon de recherche
 // dans « Plateforme », avec l'état des services en ligne (paiement, code).
@@ -15,6 +15,7 @@ import { LANGUES, useLangue } from '@/i18n/index.jsx'
 import api, { messageErreur } from '@/lib/api.js'
 import { libelleVersion, LOT } from '@/version.js'
 import { NOUVEAUTES } from '@/nouveautes.js'
+import InstallerApplication from '@/composants/InstallerApplication.jsx'
 
 // Rubriques et leurs champs.
 // `id` = titre français exact de la rubrique : c'est la cible des cartes
@@ -128,6 +129,7 @@ export default function Parametres() {
   // Titre traduit d'une rubrique à partir de son identifiant
   const titreRubrique = (id) => {
     const r = RUBRIQUES.find((x) => x.id === id)
+    if (id === 'Application Android') return t('adm.param.rub.android')
     return r ? t(`adm.param.rub.${r.cle}`) : id
   }
   const services = config.paiements_en_ligne || {}
@@ -211,6 +213,13 @@ export default function Parametres() {
           <button type="submit" disabled={envoi} className="btn-principal px-8 py-3 shadow-lg">{t('adm.param.enregistrer')}</button>
         </div>
       </form>
+
+      {/* Application Android installable (lot 36) : état + bouton d'installation */}
+      <section className="surface scroll-mt-6 transition" id={ancre('Application Android')}>
+        <h2 className="text-lg font-bold">{t('adm.param.rub.android')}</h2>
+        <p className="mt-2 text-sm text-ardoise">{t('adm.param.android.aide')}</p>
+        <div className="mt-4"><InstallerApplication etat /></div>
+      </section>
 
       {/* Version du site et du serveur */}
       <section className="surface" id={ancre('Version')}>

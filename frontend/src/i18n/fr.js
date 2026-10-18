@@ -175,6 +175,18 @@ export default {
 
   // --- Connexion / inscription
   'cnx.titre': 'Connexion',
+  // Application Android installable (lot 36)
+  'install.bouton': "Installer l'application",
+  'install.titre': "Installer l'application",
+  'install.deja': "✅ L'application est déjà installée sur cet appareil.",
+  'install.android0': "Sur Android, avec Chrome :",
+  'install.android1': "Touchez le menu ⋮ en haut à droite.",
+  'install.android2': "Choisissez « Installer l'application » (ou « Ajouter à l'écran d'accueil »).",
+  'install.android3': "Confirmez : l'icône bfmobility apparaît sur votre écran d'accueil.",
+  'install.iphone1': "Ouvrez ce site dans Safari.",
+  'install.iphone2': "Touchez le bouton Partager (carré avec une flèche vers le haut).",
+  'install.iphone3': "Choisissez « Sur l'écran d'accueil ».",
+  'install.note': "Le bouton d'installation direct n'apparaît que dans Chrome, quand le site est ouvert depuis une adresse sécurisée.",
   'cnx.sousTitre': 'Content de vous revoir.',
   'cnx.identifiant': 'E-mail ou téléphone',
   'cnx.mdp': 'Mot de passe',

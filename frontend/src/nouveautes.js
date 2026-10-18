@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 36,
+    date: '18/10/2026',
+    titre: 'Application Android installable',
+    description: 'bfmobility s\u2019installe sur téléphone comme une application (icône, plein écran, page « Pas de connexion ») et peut être empaquetée par PWABuilder pour le Play Store. Bouton « Installer l\u2019application » sur la connexion et en bas du site.',
+    rubrique: 'Application Android',
+  },
+  {
     lot: 32,
     date: '14/10/2026',
     titre: 'Jauge du cluster de production',

@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 37,
+    date: '20/10/2026',
+    titre: 'Compteur de véhicules instantané (prévention MongoDB)',
+    description: 'Le tableau de bord n\u2019analyse plus toute la collection des véhicules à chaque affichage : moins de lectures sur MongoDB à mesure que la base grossit.',
+    rubrique: 'Plateforme',
+  },
+  {
     lot: 36,
     date: '18/10/2026',
     titre: 'Application Android installable',

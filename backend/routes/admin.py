@@ -324,7 +324,8 @@ async def tableau_de_bord(u: dict = Depends(exiger(*ATELIER))):
     return {
         "courses_jour": len(du_jour), "chiffre_jour": round(sum(montant(c) for c in du_jour), 2),
         "courses_mois": len(du_mois), "chiffre_mois": round(sum(montant(c) for c in du_mois), 2),
-        "vehicules": {"total": await db.vehicules.count_documents({}), "disponibles": vehicules["disponible"],
+        # Lot 37 : estimation instantanée (métadonnées) au lieu de count_documents({}), qui parcourt toute la collection
+        "vehicules": {"total": await db.vehicules.estimated_document_count(), "disponibles": vehicules["disponible"],
                       "en_service": vehicules["en_service"], "maintenance": vehicules["maintenance"]},
         "chauffeurs_en_ligne": await db.utilisateurs.count_documents({"role": "chauffeur", "chauffeur.en_ligne": True}),
         "note_moyenne": round(sum(notes) / len(notes), 2) if notes else None,

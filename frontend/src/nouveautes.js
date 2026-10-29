@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 38,
+    date: '28/10/2026',
+    titre: 'Tableaux : la ligne sélectionnée est maintenant en police bleu nuit',
+    description: 'La ligne sélectionnée d’un tableau garde son fond orange clair mais le texte passe du blanc au bleu nuit : lisible (7,7 pour 1 au lieu de 2 pour 1).',
+    rubrique: 'Nouveautés',
+  },
+  {
     lot: 37,
     date: '20/10/2026',
     titre: 'Compteur de véhicules instantané (prévention MongoDB)',

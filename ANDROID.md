@@ -11,7 +11,7 @@ Si le bouton ne lance rien, la petite fenêtre explique le geste : menu ⋮ de C
 Tout se fait avec des clics sur un site web.
 
 1. Ouvrir **https://www.pwabuilder.com**.
-2. Saisir l'adresse du site : **https://sawalismartsysems.com** puis cliquer **Start**.
+2. Saisir l'adresse du site : **https://bfmobility.cloud** puis cliquer **Start**. (Le paquet est lié à cette adresse : ne le créer qu'APRÈS la bascule de domaine, voir `docs/BASCULE_DOMAINE.md`.)
 3. Vérifier que le manifeste et le « Service Worker » sont bien détectés (coches vertes), puis cliquer **Package for stores**, puis **Android**.
 4. Remplir les deux champs importants :
    - **Nom de l'application** : `bfmobility`

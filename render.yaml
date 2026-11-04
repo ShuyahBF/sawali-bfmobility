@@ -13,9 +13,12 @@ services:
     buildCommand: pip install -r requirements.txt
     startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /api/health
-    # Domaine du serveur : api.sawalismartsysems.com (DNS du domaine : CNAME api → bfmobility-backend.onrender.com)
+    # Domaines du serveur (DNS : CNAME api → bfmobility-backend.onrender.com).
+    # 05/11/2026 : NOUVEAU domaine bfmobility.cloud AJOUTÉ à côté de l'ancien (api.sawalismartsysems.com), qui reste en service
+    # pendant la transition. Étapes de bascule : docs/BASCULE_DOMAINE.md.
     domains:
       - api.sawalismartsysems.com
+      - api.bfmobility.cloud
     envVars:
       - key: PYTHON_VERSION
         value: 3.11.10
@@ -32,8 +35,11 @@ services:
       # --- Sites autorisés (CORS) : la PREMIÈRE adresse sert aux liens (retours de paiement, messages) ---
       # Domaine de bfmobility : sawalismartsysems.com (DNS vérifié le 09/10/2026) — adresse principale, en premier.
       # www et l'adresse Render restent autorisés (www renvoie vers le domaine principal).
+      # 05/11/2026 : bfmobility.cloud et www.bfmobility.cloud sont AUTORISÉS dès maintenant (CORS), mais restent EN DERNIER :
+      # la PREMIÈRE adresse sert aux liens (retours de paiement, messages) et ne doit changer qu'une fois le nouveau domaine
+      # validé dans Render (docs/BASCULE_DOMAINE.md, étape « Bascule »).
       - key: FRONTEND_ORIGIN
-        value: https://sawalismartsysems.com,https://www.sawalismartsysems.com,https://bfmobility-frontend.onrender.com
+        value: https://sawalismartsysems.com,https://www.sawalismartsysems.com,https://bfmobility.cloud,https://www.bfmobility.cloud,https://bfmobility-frontend.onrender.com
       # --- Premier administrateur (créé au premier démarrage) ---
       - key: ADMIN_EMAIL
         sync: false
@@ -88,9 +94,12 @@ services:
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     # Domaine du site : sawalismartsysems.com (A @ → 216.24.57.1) et www (CNAME www → bfmobility-frontend.onrender.com)
+    # 05/11/2026 : NOUVEAU domaine bfmobility.cloud AJOUTÉ (mêmes enregistrements DNS : A @ → 216.24.57.1 ; CNAME www et api).
     domains:
       - sawalismartsysems.com
       - www.sawalismartsysems.com
+      - bfmobility.cloud
+      - www.bfmobility.cloud
     # Application monopage : toutes les adresses renvoient index.html
     routes:
       - type: rewrite
@@ -98,5 +107,7 @@ services:
         destination: /index.html
     envVars:
       # Serveur appelé par le site : sous-domaine api du domaine bfmobility (CNAME → bfmobility-backend)
+      # Reste sur l'ANCIEN domaine jusqu'à la bascule : api.bfmobility.cloud n'est utilisable qu'une fois son DNS validé dans Render
+      # (docs/BASCULE_DOMAINE.md). Valeur après bascule : https://api.bfmobility.cloud
       - key: VITE_API_URL
         value: https://api.sawalismartsysems.com

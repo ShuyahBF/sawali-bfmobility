@@ -8,6 +8,13 @@
 // ============================================================================
 export const NOUVEAUTES = [
   {
+    lot: 43,
+    date: '18/11/2026',
+    titre: 'Tableaux longs : barre de défilement',
+    description: 'Tout tableau de plus de 30 lignes défile dans son cadre (en-tête toujours visible) : la page reste courte. À l’impression, toutes les lignes sortent.',
+    rubrique: 'Nouveautés',
+  },
+  {
     lot: 38,
     date: '28/10/2026',
     titre: 'Tableaux : la ligne sélectionnée est maintenant en police bleu nuit',

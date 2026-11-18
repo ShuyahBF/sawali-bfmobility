@@ -127,3 +127,19 @@ img, video, .leaflet-container {
   .print-plein { box-shadow: none !important; border: 0 !important; margin: 0 !important; max-width: none !important; }
   @page { margin: 14mm; }
 }
+
+/* ===================================================================
+   Règle « tableaux de plus de 30 lignes » (18/11/2026) : le conteneur défile (module lib/defilementTableaux.js) ; l'en-tête reste visible en haut.
+   À l'impression, toutes les lignes sont imprimées.
+   =================================================================== */
+[data-defilement="oui"] thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+@media print {
+  [data-defilement="oui"] {
+    max-height: none !important;
+    overflow: visible !important;
+  }
+}
